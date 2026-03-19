@@ -369,10 +369,15 @@
     <a onclick="showPage('artikel')"><span class="ico">📦</span>Artikel<span class="cnt" id="cnt-a">0</span></a>
     <a onclick="showPage('lager')"><span class="ico">🏭</span>Lagerbestand</a>
     <a onclick="showPage('inventur')"><span class="ico">📋</span>Inventur</a>
+    <div class="nav-section">Kunden & Aufträge</div>
+    <a onclick="showPage('kunden')"><span class="ico">👤</span>Kundenstamm<span class="cnt" id="cnt-kunden">0</span></a>
+    <a onclick="showPage('kbestellungen')"><span class="ico">📋</span>Kundenaufträge<span class="cnt" id="cnt-kbest">0</span></a>
     <div class="nav-section">Lieferkette</div>
-    <a onclick="showPage('lieferanten')"><span class="ico">🚚</span>Lieferanten</a>
-    <a onclick="showPage('bestellungen')"><span class="ico">🛒</span>Bestellungen<span class="cnt" id="cnt-b">0</span></a>
-    <a onclick="showPage('lieferungen')"><span class="ico">📬</span>Lieferungen</a>
+    <a onclick="showPage('lieferanten')"><span class="ico">🏭</span>Lieferanten</a>
+    <a onclick="showPage('bestellungen')"><span class="ico">🛒</span>Einkauf<span class="cnt" id="cnt-b">0</span></a>
+    <a onclick="showPage('lieferungen')"><span class="ico">📬</span>Wareneingänge</a>
+    <div class="nav-section">Logistik</div>
+    <a onclick="showPage('fahrer')"><span class="ico">🧑‍✈️</span>Fahrerverwaltung<span class="cnt" id="cnt-fahrer">0</span></a>
     <a onclick="showPage('touren')"><span class="ico">🗺️</span>Tourenplanung<span class="cnt" id="cnt-touren">0</span></a>
     <div class="nav-section">Auswertung</div>
     <a onclick="showPage('berichte')"><span class="ico">📈</span>Berichte</a>
@@ -699,7 +704,205 @@
         </div>
       </div>
     </div>
+
+    <!-- KUNDENSTAMM -->
+    <div class="page" id="page-kunden">
+      <div class="ph">
+        <div><h1>Kundenstamm</h1><div class="sub">Alle Kunden verwalten</div></div>
+        <div class="spacer"></div>
+        <div class="sb"><input type="text" placeholder="Suchen…" id="kunden-search" oninput="filterKunden()"></div>
+        <button class="btn bp" onclick="openMo('mo-kunde')">+ Neuer Kunde</button>
+      </div>
+      <div class="sg">
+        <div class="sc"><div class="sl">Kunden gesamt</div><div class="sv" id="kstat-total">–</div></div>
+        <div class="sc"><div class="sl">Offene Aufträge</div><div class="sv" style="color:var(--amber)" id="kstat-offen">–</div></div>
+        <div class="sc"><div class="sl">Touren geplant</div><div class="sv" style="color:var(--lime)" id="kstat-touren">–</div></div>
+        <div class="sc"><div class="sl">Umsatz lfd. Monat</div><div class="sv" style="color:var(--lime)" id="kstat-umsatz">–</div></div>
+      </div>
+      <div class="card">
+        <div class="tw"><table>
+          <thead><tr><th>Nr.</th><th>Firma / Name</th><th>Kontakt</th><th>PLZ / Ort</th><th>Tel.</th><th>Offene Aufträge</th><th>Letzte Aktivität</th><th>Aktionen</th></tr></thead>
+          <tbody id="kunden-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- KUNDENAUFTRÄGE -->
+    <div class="page" id="page-kbestellungen">
+      <div class="ph">
+        <div><h1>Kundenaufträge</h1><div class="sub">Materialversand & Lieferungen an Kunden</div></div>
+        <div class="spacer"></div>
+        <select id="kbest-filter-kunde" onchange="renderKBest()" style="width:auto;padding:7px 10px;font-size:13px">
+          <option value="">Alle Kunden</option>
+        </select>
+        <select id="kbest-filter-status" onchange="renderKBest()" style="width:auto;padding:7px 10px;font-size:13px">
+          <option value="">Alle Status</option>
+          <option value="Offen">Offen</option>
+          <option value="Bereit">Bereit zur Lieferung</option>
+          <option value="Unterwegs">Unterwegs</option>
+          <option value="Geliefert">Geliefert</option>
+        </select>
+        <button class="btn bp" onclick="openMo('mo-kbest')">+ Neuer Auftrag</button>
+      </div>
+      <div class="card">
+        <div class="tw"><table>
+          <thead><tr><th>Auftrag-Nr.</th><th>Kunde</th><th>Lieferadresse</th><th>Positionen</th><th>Wert</th><th>Lieferdatum</th><th>Tour</th><th>Status</th><th>Aktionen</th></tr></thead>
+          <tbody id="kbest-tbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- FAHRERVERWALTUNG -->
+    <div class="page" id="page-fahrer">
+      <div class="ph">
+        <div><h1>Fahrerverwaltung</h1><div class="sub">Fahrer & Fahrzeuge</div></div>
+        <div class="spacer"></div>
+        <button class="btn bp" onclick="openMoFahrer()">+ Neuer Fahrer</button>
+      </div>
+      <div class="g2">
+        <div>
+          <div class="card">
+            <div class="ch"><h2>👤 Alle Fahrer</h2></div>
+            <div id="fahrer-page-list" style="padding:12px;display:flex;flex-direction:column;gap:10px"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><h2 id="fahrer-form-title">Neuen Fahrer erfassen</h2></div>
+          <div class="cb">
+            <div class="fg" style="grid-template-columns:1fr">
+              <input type="hidden" id="fp-id">
+              <div class="fgr"><label>Name *</label><input id="fp-name" placeholder="Max Muster"></div>
+              <div class="fgr"><label>E-Mail *</label><input type="email" id="fp-email" placeholder="fahrer@firma.ch"></div>
+              <div class="fgr"><label>Telefon</label><input id="fp-tel" placeholder="+41 79 000 00 00"></div>
+              <div class="fgr"><label>Fahrzeug</label><input id="fp-fahrzeug" placeholder="VW Crafter ZH 12345"></div>
+              <div class="fgr"><label>Führerschein-Klasse</label>
+                <select id="fp-klasse">
+                  <option value="B">B – PKW / kleiner Lieferwagen</option>
+                  <option value="BE">BE – mit Anhänger</option>
+                  <option value="C1">C1 – bis 7.5t</option>
+                  <option value="C">C – LKW</option>
+                </select>
+              </div>
+              <div class="fgr"><label>Farbe im Kalender</label>
+                <select id="fp-color">
+                  <option value="lime">🟢 Limegrün</option>
+                  <option value="purple">🟣 Lila</option>
+                  <option value="blue">🔵 Blau</option>
+                  <option value="amber">🟠 Orange</option>
+                  <option value="red">🔴 Rot</option>
+                </select>
+              </div>
+              <div class="fgr"><label>Bemerkung</label><input id="fp-bem" placeholder="z.B. Montag frei"></div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:16px">
+              <button class="btn bp" onclick="saveFahrerPage()">💾 Speichern</button>
+              <button class="btn bo" onclick="resetFahrerForm()">↺ Neu</button>
+            </div>
+            <div id="fp-msg" style="display:none;margin-top:10px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
+</div>
+
+
+<!-- KUNDE MODAL -->
+<div class="mo" id="mo-kunde">
+  <div class="mb" style="max-width:600px">
+    <div class="mh"><h3>👤 Kunde erfassen / bearbeiten</h3><button class="mc" onclick="closeMo('mo-kunde')">×</button></div>
+    <div class="mbo">
+      <input type="hidden" id="k-id">
+      <div class="fg">
+        <div class="fgr"><label>Kunden-Nr. *</label><input id="k-nr" placeholder="KD-0001"></div>
+        <div class="fgr"><label>Typ</label>
+          <select id="k-typ"><option value="firma">Firma</option><option value="privat">Privat</option></select>
+        </div>
+        <div class="fgr" style="grid-column:1/-1"><label>Firma / Name *</label><input id="k-firma" placeholder="Fischer AG"></div>
+        <div class="fgr"><label>Kontaktperson</label><input id="k-kontakt" placeholder="Beat Fischer"></div>
+        <div class="fgr"><label>E-Mail</label><input type="email" id="k-email" placeholder="info@fischer-ag.ch"></div>
+        <div class="fgr"><label>Telefon</label><input id="k-tel" placeholder="+41 44 800 00 00"></div>
+        <div class="fgr" style="grid-column:1/-1"><label>Lieferadresse (Standard)</label><input id="k-adresse" placeholder="Musterstrasse 1"></div>
+        <div class="fgr"><label>PLZ</label><input id="k-plz" placeholder="8302"></div>
+        <div class="fgr"><label>Ort</label><input id="k-ort" placeholder="Kloten"></div>
+        <div class="fgr"><label>Zahlungsziel (Tage)</label><input type="number" id="k-ziel" value="30"></div>
+        <div class="fgr"><label>Rabatt %</label><input type="number" id="k-rabatt" value="0" min="0" max="100"></div>
+        <div class="fgr" style="grid-column:1/-1"><label>Bemerkung</label><textarea id="k-bem" rows="2"></textarea></div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn bo" onclick="closeMo('mo-kunde')">Abbrechen</button>
+      <button class="btn bp" onclick="saveKunde()">💾 Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- KUNDENAUFTRAG MODAL -->
+<div class="mo" id="mo-kbest">
+  <div class="mb" style="max-width:640px">
+    <div class="mh"><h3>📋 Kundenauftrag erfassen</h3><button class="mc" onclick="closeMo('mo-kbest')">×</button></div>
+    <div class="mbo">
+      <input type="hidden" id="kb-id">
+      <div class="fg">
+        <div class="fgr"><label>Kunde *</label>
+          <select id="kb-kunde" onchange="prefillKundeAdresse()"><option value="">– Kunden wählen –</option></select>
+        </div>
+        <div class="fgr"><label>Auftrag-Nr.</label><input id="kb-nr" placeholder="auto"></div>
+        <div class="fgr" style="grid-column:1/-1"><label>Lieferadresse</label><input id="kb-adresse" placeholder="wird vom Kunden übernommen"></div>
+        <div class="fgr"><label>PLZ</label><input id="kb-plz" placeholder="8302"></div>
+        <div class="fgr"><label>Ort</label><input id="kb-ort" placeholder="Kloten"></div>
+        <div class="fgr"><label>Gewünschtes Lieferdatum *</label><input type="date" id="kb-datum"></div>
+        <div class="fgr"><label>Zeitfenster</label><input id="kb-zeitfenster" placeholder="08:00–12:00"></div>
+        <div class="fgr" style="grid-column:1/-1">
+          <label>Positionen (Artikel aus Lager)</label>
+          <div id="kb-positionen" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+          <button class="btn bo bs" type="button" onclick="addKBPos()">+ Position hinzufügen</button>
+        </div>
+        <div class="fgr" style="grid-column:1/-1">
+          <div id="kb-total-box" style="background:var(--bg3);border-radius:8px;padding:12px;display:none">
+            <div style="display:flex;justify-content:space-between;font-size:13px">
+              <span class="tr">Subtotal exkl. MWST</span><span id="kb-subtotal">CHF 0.00</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:4px">
+              <span class="tr">MWST 7.7%</span><span id="kb-mwst-val">CHF 0.00</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;color:var(--lime);margin-top:8px;border-top:1px solid var(--border);padding-top:8px">
+              <span>Total inkl. MWST</span><span id="kb-total">CHF 0.00</span>
+            </div>
+          </div>
+        </div>
+        <div class="fgr" style="grid-column:1/-1"><label>Lieferhinweis</label><textarea id="kb-bem" rows="2" placeholder="z.B. Eingang Rückseite, Tor-Code…"></textarea></div>
+        <div class="fgr"><label>Direkt als Lieferschein erstellen</label>
+          <select id="kb-ls-create">
+            <option value="ja">Ja – Lieferschein sofort erstellen</option>
+            <option value="nein">Nein – nur Auftrag speichern</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn bo" onclick="closeMo('mo-kbest')">Abbrechen</button>
+      <button class="btn bp" onclick="saveKBest()">💾 Auftrag speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- FAHRER MODAL (für Tourenplanung) -->
+<div class="mo" id="mo-fahrer">
+  <div class="mb">
+    <div class="mh"><h3>🧑‍✈️ Fahrer</h3><button class="mc" onclick="closeMo('mo-fahrer')">×</button></div>
+    <div class="mbo">
+      <div style="background:var(--lime-bg);border:1px solid rgba(163,230,53,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--lime);margin-bottom:16px">
+        💡 Fahrer direkt unter <strong>Logistik → Fahrerverwaltung</strong> verwalten. Hier nur Schnellansicht.
+      </div>
+      <div id="fahrer-list-modal" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+    <div class="mf">
+      <button class="btn bo" onclick="closeMo('mo-fahrer')">Schliessen</button>
+      <button class="btn bp" onclick="closeMo('mo-fahrer');showPage('fahrer')">→ Fahrerverwaltung öffnen</button>
+    </div>
+  </div>
 </div>
 
 <!-- LOADER -->
@@ -986,6 +1189,8 @@ if(!cfg){
     document.getElementById('lsub').textContent='Mandant: '+KID;
     document.getElementById('ddatum').textContent=new Date().toLocaleDateString('de-CH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
     if(G.role!=='admin')document.getElementById('nav-usr').style.display='none';
+    // Init counters
+    ['cnt-kunden','cnt-kbest','cnt-fahrer'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='';});
     document.getElementById('cfginfo').innerHTML=`
       <div class="kr"><span class="kl">Projekt-ID</span><span class="kv">${cfg.fb.projectId}</span></div>
       <div class="kr"><span class="kl">Kunden-ID</span><span class="kv tb">${KID}</span></div>
@@ -1021,6 +1226,7 @@ if(!cfg){
     startKatSub();
     startAktSub();
     startTourenSub();
+    startKundenSub();
   }
   function updateCnts(){
     document.getElementById('cnt-a').textContent=CA.length;
@@ -1040,7 +1246,10 @@ if(!cfg){
     const m={dash:renderDash,artikel:renderArtikel,lager:renderLager,inventur:renderInv,
       lieferanten:renderLF,bestellungen:renderBest,lieferungen:renderLief,berichte:renderBer,
       benutzer:renderBenutzer,kategorien:()=>{renderKategorien();},aktivitaet:()=>{renderAkt();},
-      touren:()=>{renderTouren();renderWeek();renderFahrerList();renderLsPool();}};
+      touren:()=>{renderTouren();renderWeek();renderFahrerList();renderLsPool();},
+      kunden:()=>{renderKunden();updateKundenStats();},
+      kbestellungen:()=>{renderKBest();populateKBestKundeFilter();},
+      fahrer:()=>{renderFahrerPage();}};
     if(m[curP])m[curP]();
   }
 
@@ -2490,7 +2699,487 @@ ${G.cu.displayName||G.cu.email}`
     origOpenMo(id);
   };
   
-  // ── BEXIO EXPORT ──
+
+  // ══════════════════════════════════════════════
+  // KUNDENSTAMM
+  // ══════════════════════════════════════════════
+  let CKUNDEN=[], CKBEST=[];
+
+  function startKundenSub(){
+    const u13=onSnapshot(query(col('kunden_stamm'),orderBy('nr')),snap=>{
+      CKUNDEN=snap.docs.map(d=>({id:d.id,...d.data()}));
+      const el=document.getElementById('cnt-kunden');
+      if(el)el.textContent=CKUNDEN.length||'';
+      if(curP==='kunden'){renderKunden();updateKundenStats();}
+      populateKBestKundeFilter();
+      populateTourKundeSelects();
+    });
+    const u14=onSnapshot(query(col('kunden_bestellungen'),orderBy('erstellt','desc')),snap=>{
+      CKBEST=snap.docs.map(d=>({id:d.id,...d.data()}));
+      const el=document.getElementById('cnt-kbest');
+      if(el){
+        const offen=CKBEST.filter(b=>b.status==='Offen'||b.status==='Bereit').length;
+        el.textContent=offen||'';
+      }
+      if(curP==='kbestellungen')renderKBest();
+      if(curP==='touren')renderLsPool();
+    });
+    unsub.push(u13,u14);
+  }
+
+  // ── RENDER KUNDENSTAMM ──
+  function renderKunden(filter=''){
+    const data=filter
+      ?CKUNDEN.filter(k=>k.firma?.toLowerCase().includes(filter)||k.nr?.toLowerCase().includes(filter)||k.ort?.toLowerCase().includes(filter))
+      :CKUNDEN;
+    const tbody=document.getElementById('kunden-tbody');if(!tbody)return;
+    tbody.innerHTML=data.length?data.map(k=>{
+      const auftraege=CKBEST.filter(b=>b.kundeId===k.id);
+      const offen=auftraege.filter(b=>b.status!=='Geliefert').length;
+      const letzte=auftraege[0]?.datum||'–';
+      return`<tr>
+        <td><span class="tag">${k.nr||'–'}</span></td>
+        <td>
+          <strong>${k.firma||'–'}</strong><br>
+          <span class="tr" style="font-size:11px">${k.kontakt||''}</span>
+        </td>
+        <td>${k.email?`<a href="mailto:${k.email}" style="color:var(--blue);font-size:12px">${k.email}</a>`:'–'}</td>
+        <td>${k.plz||''} ${k.ort||''}</td>
+        <td>${k.tel||'–'}</td>
+        <td>${offen>0?`<span class="badge ba">${offen} offen</span>`:`<span class="badge bg">Alle erledigt</span>`}</td>
+        <td class="tr" style="font-size:12px">${letzte}</td>
+        <td style="display:flex;gap:5px">
+          <button class="btn bp bs" onclick="newKBestForKunde('${k.id}')" title="Neuer Auftrag">+📋</button>
+          <button class="btn bo bs" onclick="editKunde('${k.id}')">✏️</button>
+          <button class="btn bo bs" style="color:var(--red)" onclick="deleteKunde('${k.id}','${(k.firma||'').replace(/'/g,"\\'")}')">🗑️</button>
+        </td>
+      </tr>`;
+    }).join(''):'<tr><td colspan="8" class="te">Noch keine Kunden – ersten Kunden erfassen</td></tr>';
+  }
+  window.filterKunden=()=>renderKunden(document.getElementById('kunden-search')?.value?.toLowerCase()||'');
+
+  function updateKundenStats(){
+    const total=document.getElementById('kstat-total');
+    const offen=document.getElementById('kstat-offen');
+    const touren=document.getElementById('kstat-touren');
+    const umsatz=document.getElementById('kstat-umsatz');
+    if(total)total.textContent=CKUNDEN.length;
+    if(offen)offen.textContent=CKBEST.filter(b=>b.status==='Offen'||b.status==='Bereit').length;
+    if(touren)touren.textContent=CKBEST.filter(b=>b.status==='Unterwegs').length;
+    if(umsatz){
+      const now=new Date();const mo=now.getMonth(),yr=now.getFullYear();
+      const sum=CKBEST.filter(b=>{
+        const d=b.erstellt?.toDate?b.erstellt.toDate():new Date(b.datum||'');
+        return d.getMonth()===mo&&d.getFullYear()===yr&&b.status!=='Storniert';
+      }).reduce((s,b)=>s+(b.totalInkl||0),0);
+      umsatz.textContent=chf(sum);
+    }
+  }
+
+  window.saveKunde=async()=>{
+    const id=document.getElementById('k-id').value;
+    const firma=document.getElementById('k-firma').value.trim();
+    const nr=document.getElementById('k-nr').value.trim();
+    if(!firma||!nr){alert('Kunden-Nr. und Firma/Name sind Pflicht.');return;}
+    const data={
+      nr,firma,typ:document.getElementById('k-typ').value,
+      kontakt:document.getElementById('k-kontakt').value,
+      email:document.getElementById('k-email').value,
+      tel:document.getElementById('k-tel').value,
+      adresse:document.getElementById('k-adresse').value,
+      plz:document.getElementById('k-plz').value,
+      ort:document.getElementById('k-ort').value,
+      zahlungsziel:parseInt(document.getElementById('k-ziel').value)||30,
+      rabatt:parseFloat(document.getElementById('k-rabatt').value)||0,
+      bemerkung:document.getElementById('k-bem').value,
+      geaendertVon:G.cu.email,geaendert:serverTimestamp()
+    };
+    try{
+      if(id)await updateDoc(dref('kunden_stamm',id),data);
+      else await addDoc(col('kunden_stamm'),{...data,erstellt:serverTimestamp()});
+      closeMo('mo-kunde');
+      document.getElementById('k-id').value='';
+      ['k-nr','k-firma','k-kontakt','k-email','k-tel','k-adresse','k-plz','k-ort','k-bem'].forEach(x=>{const el=document.getElementById(x);if(el)el.value='';});
+      document.getElementById('k-ziel').value='30';
+      document.getElementById('k-rabatt').value='0';
+      toast('Kunde gespeichert');
+    }catch(e){toast(e.message,'r');}
+  };
+  window.editKunde=id=>{
+    const k=CKUNDEN.find(x=>x.id===id);if(!k)return;
+    document.getElementById('k-id').value=id;
+    document.getElementById('k-nr').value=k.nr||'';
+    document.getElementById('k-firma').value=k.firma||'';
+    document.getElementById('k-typ').value=k.typ||'firma';
+    document.getElementById('k-kontakt').value=k.kontakt||'';
+    document.getElementById('k-email').value=k.email||'';
+    document.getElementById('k-tel').value=k.tel||'';
+    document.getElementById('k-adresse').value=k.adresse||'';
+    document.getElementById('k-plz').value=k.plz||'';
+    document.getElementById('k-ort').value=k.ort||'';
+    document.getElementById('k-ziel').value=k.zahlungsziel||30;
+    document.getElementById('k-rabatt').value=k.rabatt||0;
+    document.getElementById('k-bem').value=k.bemerkung||'';
+    openMo('mo-kunde');
+  };
+  window.deleteKunde=async(id,name)=>{
+    if(!confirm(`Kunde "${name}" löschen? Aufträge bleiben erhalten.`))return;
+    try{await deleteDoc(dref('kunden_stamm',id));toast('Kunde gelöscht');}
+    catch(e){toast(e.message,'r');}
+  };
+  window.newKBestForKunde=(kundeId)=>{
+    const sel=document.getElementById('kb-kunde');
+    if(sel)sel.value=kundeId;
+    prefillKundeAdresse();
+    openMo('mo-kbest');
+  };
+  function populateKBestKundeFilter(){
+    ['kbest-filter-kunde','kb-kunde'].forEach(id=>{
+      const sel=document.getElementById(id);if(!sel)return;
+      const cur=sel.value;
+      if(id==='kbest-filter-kunde'){
+        sel.innerHTML='<option value="">Alle Kunden</option>'+CKUNDEN.map(k=>`<option value="${k.id}">${k.firma}</option>`).join('');
+      } else {
+        sel.innerHTML='<option value="">– Kunden wählen –</option>'+CKUNDEN.map(k=>`<option value="${k.id}">${k.nr} – ${k.firma}</option>`).join('');
+      }
+      if(cur)sel.value=cur;
+    });
+  }
+  window.prefillKundeAdresse=()=>{
+    const sel=document.getElementById('kb-kunde');if(!sel)return;
+    const k=CKUNDEN.find(x=>x.id===sel.value);if(!k)return;
+    const adr=document.getElementById('kb-adresse');const plz=document.getElementById('kb-plz');const ort=document.getElementById('kb-ort');
+    if(adr&&!adr.value)adr.value=k.adresse||'';
+    if(plz&&!plz.value)plz.value=k.plz||'';
+    if(ort&&!ort.value)ort.value=k.ort||'';
+  };
+
+  // ── KUNDENAUFTRÄGE ──
+  let kbPositionen=[];
+  window.addKBPos=()=>{
+    kbPositionen.push({artikelId:'',bez:'',menge:1,ep:0});
+    renderKBPositionen();
+  };
+  function renderKBPositionen(){
+    const el=document.getElementById('kb-positionen');if(!el)return;
+    el.innerHTML=kbPositionen.map((p,i)=>{
+      const arOpts=CA.map(a=>`<option value="${a.id}" ${a.id===p.artikelId?'selected':''}>${a.nr} – ${a.bez} (${a.bestand} ${a.einheit||'Stk.'})</option>`).join('');
+      return`<div style="display:flex;gap:6px;align-items:center;background:var(--bg3);padding:8px;border-radius:6px">
+        <select style="flex:2" onchange="kbSelectArtikel(${i},this.value)"><option value="">– Artikel wählen –</option>${arOpts}</select>
+        <input type="number" value="${p.menge}" min="1" style="width:70px" placeholder="Menge" oninput="kbPositionen[${i}].menge=parseInt(this.value)||1;kbCalcTotal()">
+        <input type="number" value="${p.ep||''}" step="0.01" style="width:90px" placeholder="EP CHF" oninput="kbPositionen[${i}].ep=parseFloat(this.value)||0;kbCalcTotal()">
+        <span style="font-size:11px;color:var(--text3);min-width:70px">=  ${chf((p.menge||1)*(p.ep||0))}</span>
+        <button class="btn bo bs" style="color:var(--red)" onclick="kbPositionen.splice(${i},1);renderKBPositionen();kbCalcTotal()">×</button>
+      </div>`;
+    }).join('');
+    kbCalcTotal();
+  }
+  window.kbSelectArtikel=(i,artId)=>{
+    const a=CA.find(x=>x.id===artId);if(!a)return;
+    kbPositionen[i].artikelId=artId;
+    kbPositionen[i].bez=a.bez;
+    kbPositionen[i].ep=a.vk||0;
+    kbPositionen[i].einheit=a.einheit||'Stk.';
+    renderKBPositionen();
+  };
+  function kbCalcTotal(){
+    const sub=kbPositionen.reduce((s,p)=>s+(p.menge||1)*(p.ep||0),0);
+    const mwst=sub*MWST;
+    const total=sub+mwst;
+    const box=document.getElementById('kb-total-box');
+    if(box&&kbPositionen.length>0){
+      box.style.display='block';
+      const s=document.getElementById('kb-subtotal');const m=document.getElementById('kb-mwst-val');const t=document.getElementById('kb-total');
+      if(s)s.textContent=chf(sub);if(m)m.textContent=chf(mwst);if(t)t.textContent=chf(total);
+    }
+    return{sub,mwst,total};
+  }
+
+  function renderKBest(){
+    const tbody=document.getElementById('kbest-tbody');if(!tbody)return;
+    const fKunde=document.getElementById('kbest-filter-kunde')?.value||'';
+    const fStatus=document.getElementById('kbest-filter-status')?.value||'';
+    const data=CKBEST.filter(b=>{
+      const ok1=!fKunde||b.kundeId===fKunde;
+      const ok2=!fStatus||b.status===fStatus;
+      return ok1&&ok2;
+    });
+    tbody.innerHTML=data.length?data.map(b=>{
+      const k=CKUNDEN.find(x=>x.id===b.kundeId);
+      const tour=CTOUREN.find(t=>(t.lieferscheine||[]).includes(b.lieferscheinId));
+      const stCls=b.status==='Offen'?'bb':b.status==='Bereit'?'ba':b.status==='Unterwegs'?'ba':b.status==='Geliefert'?'bg':'bgr';
+      const posCount=(b.positionen||[]).length;
+      const tourBadge=tour?`<span class="badge bb" style="font-size:10px">${tour.nr}</span>`:'<span class="tr" style="font-size:11px">–</span>';
+      return`<tr>
+        <td><span class="tag">${b.nr||'–'}</span></td>
+        <td><strong>${k?.firma||'–'}</strong><br><span class="tr" style="font-size:11px">${k?.plz||''} ${k?.ort||''}</span></td>
+        <td style="font-size:12px;color:var(--text2)">${b.adresse||''} ${b.plz||''} ${b.ort||''}</td>
+        <td><span class="badge bgr">${posCount} Pos.</span></td>
+        <td class="fw" style="color:var(--lime)">${chf(b.totalInkl||0)}</td>
+        <td style="color:${b.datum<new Date().toISOString().split('T')[0]?'var(--red)':'var(--text2)'};font-size:12px">${b.datum||'–'}</td>
+        <td>${tourBadge}</td>
+        <td><span class="badge ${stCls}">${b.status||'Offen'}</span></td>
+        <td style="display:flex;gap:4px">
+          <button class="btn bp bs" onclick="kbestZurTour('${b.id}')" title="Zur Tour hinzufügen" ${b.status==='Geliefert'?'disabled':''}>🗺️</button>
+          <button class="btn bo bs" onclick="nextKBestStatus('${b.id}','${b.status}')">▶</button>
+          <button class="btn bo bs" onclick="editKBest('${b.id}')">✏️</button>
+        </td>
+      </tr>`;
+    }).join(''):'<tr><td colspan="9" class="te">Keine Aufträge</td></tr>';
+  }
+
+  window.nextKBestStatus=async(id,cur)=>{
+    const seq=['Offen','Bereit','Unterwegs','Geliefert'];
+    const nxt=seq[(seq.indexOf(cur)+1)%seq.length];
+    try{await updateDoc(dref('kunden_bestellungen',id),{status:nxt,geaendert:serverTimestamp()});toast('Status → '+nxt);}
+    catch(e){toast(e.message,'r');}
+  };
+
+  window.kbestZurTour=async(kbId)=>{
+    const kb=CKBEST.find(x=>x.id===kbId);if(!kb){toast('Auftrag nicht gefunden','r');return;}
+    const k=CKUNDEN.find(x=>x.id===kb.kundeId);
+    // Lieferschein erstellen falls noch keiner
+    let lsId=kb.lieferscheinId;
+    if(!lsId){
+      const lsNr='LS-'+new Date().getFullYear()+'-'+String(CLIEFERSCHEINE.length+1).padStart(3,'0');
+      const lsData={
+        nr:lsNr,empfaenger:k?.firma||'–',
+        adresse:kb.adresse||k?.adresse||'',
+        plz:kb.plz||k?.plz||'',ort:kb.ort||k?.ort||'',
+        kontakt:k?.kontakt||'',tel:k?.tel||'',
+        datum:kb.datum||'',zeitfenster:kb.zeitfenster||'',
+        bemerkung:kb.bemerkung||'',positionen:kb.positionen||[],
+        kundeId:kb.kundeId,kbId:kbId,tourId:null,
+        erstellt:serverTimestamp(),erstelltVon:G.cu.email
+      };
+      try{
+        const ref=await addDoc(col('lieferscheine'),lsData);
+        lsId=ref.id;
+        await updateDoc(dref('kunden_bestellungen',kbId),{lieferscheinId:lsId,status:'Bereit',geaendert:serverTimestamp()});
+        toast('Lieferschein erstellt · jetzt Tour auswählen');
+      }catch(e){toast(e.message,'r');return;}
+    }
+    // Open tour selection
+    const offeTouren=CTOUREN.filter(t=>t.status==='Geplant');
+    if(!offeTouren.length){
+      if(confirm('Keine geplante Tour vorhanden. Neue Tour erstellen?')){
+        const dt=document.getElementById('tour-datum');if(dt)dt.value=kb.datum||new Date().toISOString().split('T')[0];
+        populateTourLsSelect();showPage('touren');openMo('mo-tour');
+      }
+      return;
+    }
+    // Add to first open tour or ask
+    if(offeTouren.length===1){
+      await addLsToTour(offeTouren[0].id,lsId);
+      await updateDoc(dref('kunden_bestellungen',kbId),{status:'Bereit',geaendert:serverTimestamp()});
+      toast('Auftrag zur Tour '+offeTouren[0].nr+' hinzugefügt');
+    } else {
+      showPage('touren');
+      toast('Lieferschein erstellt – bitte in der Tourenplanung zur Tour hinzufügen');
+    }
+  };
+
+  window.saveKBest=async()=>{
+    const kundeId=document.getElementById('kb-kunde').value;
+    const datum=document.getElementById('kb-datum').value;
+    if(!kundeId||!datum){alert('Kunde und Lieferdatum sind Pflicht.');return;}
+    if(!kbPositionen.length){alert('Mindestens eine Position hinzufügen.');return;}
+    const k=CKUNDEN.find(x=>x.id===kundeId);
+    const {sub,mwst,total}=kbCalcTotal();
+    const id=document.getElementById('kb-id').value;
+    const nr='KB-'+new Date().getFullYear()+'-'+String(CKBEST.length+1).padStart(3,'0');
+    const lsCreate=document.getElementById('kb-ls-create')?.value==='ja';
+    const data={
+      nr:id?undefined:nr,
+      kundeId,kundeFirma:k?.firma||'',
+      adresse:document.getElementById('kb-adresse').value,
+      plz:document.getElementById('kb-plz').value,
+      ort:document.getElementById('kb-ort').value,
+      datum,zeitfenster:document.getElementById('kb-zeitfenster').value,
+      bemerkung:document.getElementById('kb-bem').value,
+      positionen:kbPositionen.map(p=>({...p})),
+      subtotal:sub,mwst:mwst,totalInkl:total,
+      status:'Offen',lieferscheinId:null,
+      geaendertVon:G.cu.email,geaendert:serverTimestamp()
+    };
+    if(id)delete data.nr;
+    try{
+      let kbDocId=id;
+      if(id)await updateDoc(dref('kunden_bestellungen',id),data);
+      else{const ref=await addDoc(col('kunden_bestellungen'),{...data,nr,erstellt:serverTimestamp()});kbDocId=ref.id;}
+      // Lagerartikel reservieren (Bestand nicht abziehen, erst bei Lieferung)
+      if(lsCreate&&kbDocId){
+        const lsNr='LS-'+new Date().getFullYear()+'-'+String(CLIEFERSCHEINE.length+1).padStart(3,'0');
+        const lsRef=await addDoc(col('lieferscheine'),{
+          nr:lsNr,empfaenger:k?.firma||'–',
+          adresse:data.adresse,plz:data.plz,ort:data.ort,
+          kontakt:k?.kontakt||'',tel:k?.tel||'',datum:data.datum,zeitfenster:data.zeitfenster,
+          bemerkung:data.bemerkung,positionen:kbPositionen.map(p=>({menge:p.menge,bez:p.bez,einheit:p.einheit||'Stk.'})),
+          kundeId,kbId:kbDocId,tourId:null,
+          erstellt:serverTimestamp(),erstelltVon:G.cu.email
+        });
+        await updateDoc(dref('kunden_bestellungen',kbDocId),{lieferscheinId:lsRef.id,status:'Bereit'});
+        toast('Auftrag + Lieferschein erstellt');
+      } else {
+        toast('Auftrag gespeichert');
+      }
+      closeMo('mo-kbest');
+      document.getElementById('kb-id').value='';
+      kbPositionen=[];renderKBPositionen();
+      ['kb-adresse','kb-plz','kb-ort','kb-zeitfenster','kb-bem'].forEach(x=>{const el=document.getElementById(x);if(el)el.value='';});
+      document.getElementById('kb-datum').value='';
+    }catch(e){toast(e.message,'r');}
+  };
+  window.editKBest=(id)=>{
+    const b=CKBEST.find(x=>x.id===id);if(!b)return;
+    document.getElementById('kb-id').value=id;
+    const sel=document.getElementById('kb-kunde');if(sel)sel.value=b.kundeId||'';
+    document.getElementById('kb-adresse').value=b.adresse||'';
+    document.getElementById('kb-plz').value=b.plz||'';
+    document.getElementById('kb-ort').value=b.ort||'';
+    document.getElementById('kb-datum').value=b.datum||'';
+    document.getElementById('kb-zeitfenster').value=b.zeitfenster||'';
+    document.getElementById('kb-bem').value=b.bemerkung||'';
+    kbPositionen=(b.positionen||[]).map(p=>({...p}));
+    renderKBPositionen();
+    openMo('mo-kbest');
+  };
+
+  // ── FAHRERVERWALTUNG PAGE ──
+  function renderFahrerPage(){
+    const el=document.getElementById('fahrer-page-list');if(!el)return;
+    const cnt=document.getElementById('cnt-fahrer');if(cnt)cnt.textContent=CFAHRER.length||'';
+    el.innerHTML=CFAHRER.length?CFAHRER.map(f=>{
+      const clr=fahrColors[f.color]||'#a3e635';
+      const bg=fahrColorBg[f.color]||'rgba(163,230,53,.12)';
+      const aktTouren=CTOUREN.filter(t=>t.fahrerId===f.id&&(t.status==='Geplant'||t.status==='Unterwegs')).length;
+      return`<div style="display:flex;align-items:center;gap:12px;padding:12px;background:${bg};border:1px solid ${clr}33;border-radius:10px">
+        <div style="width:40px;height:40px;border-radius:50%;background:${clr}22;border:2px solid ${clr};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:${clr};flex-shrink:0">${(f.name||'?')[0].toUpperCase()}</div>
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:14px;color:var(--text)">${f.name}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${f.email||'–'} · ${f.tel||''}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:2px">🚐 ${f.fahrzeug||'–'} · Klasse ${f.klasse||'B'} · ${aktTouren} aktive Tour${aktTouren!==1?'en':''}</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn bo bs" onclick="editFahrerPage('${f.id}')">✏️</button>
+          <button class="btn bo bs" style="color:var(--red)" onclick="deleteFahrer('${f.id}','${(f.name||'').replace(/'/g,"\\'")}')">🗑️</button>
+        </div>
+      </div>`;
+    }).join(''):'<div class="te" style="padding:24px">Noch keine Fahrer – rechts erfassen</div>';
+
+    // Also update modal list
+    const elMod=document.getElementById('fahrer-list-modal');
+    if(elMod)elMod.innerHTML=el.innerHTML;
+  }
+  window.openMoFahrer=()=>{resetFahrerForm();document.getElementById('fahrer-form-title').textContent='Neuen Fahrer erfassen';};
+  window.resetFahrerForm=()=>{
+    document.getElementById('fp-id').value='';
+    ['fp-name','fp-email','fp-tel','fp-fahrzeug','fp-bem'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    document.getElementById('fp-klasse').value='B';
+    document.getElementById('fp-color').value='lime';
+    const msg=document.getElementById('fp-msg');if(msg)msg.style.display='none';
+  };
+  window.editFahrerPage=(id)=>{
+    const f=CFAHRER.find(x=>x.id===id);if(!f)return;
+    document.getElementById('fp-id').value=id;
+    document.getElementById('fp-name').value=f.name||'';
+    document.getElementById('fp-email').value=f.email||'';
+    document.getElementById('fp-tel').value=f.tel||'';
+    document.getElementById('fp-fahrzeug').value=f.fahrzeug||'';
+    document.getElementById('fp-klasse').value=f.klasse||'B';
+    document.getElementById('fp-color').value=f.color||'lime';
+    document.getElementById('fp-bem').value=f.bemerkung||'';
+    document.getElementById('fahrer-form-title').textContent='Fahrer bearbeiten';
+    document.querySelector('#page-fahrer .card .ch h2')?.scrollIntoView({behavior:'smooth'});
+  };
+  window.saveFahrerPage=async()=>{
+    const id=document.getElementById('fp-id').value;
+    const name=document.getElementById('fp-name').value.trim();
+    const email=document.getElementById('fp-email').value.trim();
+    if(!name||!email){
+      const msg=document.getElementById('fp-msg');
+      if(msg){msg.style.display='block';msg.className='al alr';msg.textContent='Name und E-Mail sind Pflicht.';}
+      return;
+    }
+    const data={name,email,tel:document.getElementById('fp-tel').value,
+      fahrzeug:document.getElementById('fp-fahrzeug').value,
+      klasse:document.getElementById('fp-klasse').value,
+      color:document.getElementById('fp-color').value,
+      bemerkung:document.getElementById('fp-bem').value,
+      geaendertVon:G.cu.email,geaendert:serverTimestamp()};
+    try{
+      if(id)await updateDoc(dref('fahrer',id),data);
+      else await addDoc(col('fahrer'),{...data,erstellt:serverTimestamp()});
+      toast('Fahrer '+(id?'aktualisiert':'gespeichert'));
+      resetFahrerForm();
+      document.getElementById('fahrer-form-title').textContent='Neuen Fahrer erfassen';
+    }catch(e){toast(e.message,'r');}
+  };
+  window.deleteFahrer=async(id,name)=>{
+    if(!confirm(`Fahrer "${name}" löschen?`))return;
+    try{await deleteDoc(dref('fahrer',id));toast('Fahrer gelöscht');}
+    catch(e){toast(e.message,'r');}
+  };
+  // Keep saveFahrer alias for backward compat (tour modal)
+  window.saveFahrer=window.saveFahrerPage;
+
+  function populateTourKundeSelects(){
+    // Update Lieferschein pool to show Kundenauftrag-linked ones
+    if(curP==='touren')renderLsPool();
+  }
+
+  // ── OVERRIDE renderLsPool to include Kundenauftraege ──
+  const _origRenderLsPool=renderLsPool;
+  renderLsPool=()=>{
+    const el=document.getElementById('ls-pool');if(!el)return;
+    // Merge: standalone Lieferscheine + Kundenauftraege mit Status Bereit ohne Tour
+    const standaloneLs=CLIEFERSCHEINE.filter(l=>!l.tourId&&!l.kbId);
+    const kbLs=CLIEFERSCHEINE.filter(l=>!l.tourId&&l.kbId);
+    const allOffen=[...standaloneLs,...kbLs];
+    el.innerHTML=allOffen.length?allOffen.map(l=>{
+      const kb=l.kbId?CKBEST.find(x=>x.id===l.kbId):null;
+      const k=kb?CKUNDEN.find(x=>x.id===kb.kundeId):null;
+      const gmapUrl=`https://maps.google.com/?q=${encodeURIComponent((l.adresse||'')+' '+(l.plz||'')+' '+(l.ort||''))}`;
+      return`<div style="padding:10px 12px;background:var(--bg3);border:1px solid ${l.kbId?'rgba(163,230,53,.2)':'var(--border2)'};border-radius:8px;cursor:pointer"
+             onclick="quickAddToTour('${l.id}')" title="Klicken um zu Tour hinzufügen">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="tag" style="font-size:10px">${l.nr||'–'}</span>
+          ${l.kbId?`<span class="badge bg" style="font-size:9px">Kundenauftrag</span>`:''}
+          <span style="font-size:10px;color:var(--amber)">${l.datum||''} ${l.zeitfenster?'· '+l.zeitfenster:''}</span>
+        </div>
+        <div style="font-weight:600;font-size:13px;color:var(--text);margin-top:4px">${l.empfaenger||'–'}</div>
+        ${k?`<div style="font-size:10px;color:var(--lime);margin-top:1px">👤 ${k.firma}</div>`:''}
+        <div style="font-size:11px;color:var(--text3)">📍 ${l.plz||''} ${l.ort||''} <a href="${gmapUrl}" target="_blank" onclick="event.stopPropagation()" style="color:var(--blue);margin-left:4px">↗</a></div>
+        <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">
+          ${(l.positionen||[]).slice(0,3).map(p=>`<span class="badge bgr" style="font-size:9px">${p.menge}× ${p.bez}</span>`).join('')}
+        </div>
+      </div>`;
+    }).join(''):'<div class="tr" style="text-align:center;font-size:13px;padding:16px">✅ Alle Lieferscheine verplant</div>';
+  };
+
+  // Datum vorausfüllen für Kundenauftrag
+  const origOpenMoKB=window.openMo;
+  // Note: openMo already overridden for tour — extend it
+  const _prevOpenMo=window.openMo;
+  window.openMo=(id)=>{
+    if(id==='mo-kbest'){
+      populateKBestKundeFilter();
+      const dt=document.getElementById('kb-datum');
+      if(dt&&!dt.value){const d=new Date();d.setDate(d.getDate()+3);dt.value=d.toISOString().split('T')[0];}
+      if(!kbPositionen.length){kbPositionen=[{artikelId:'',bez:'',menge:1,ep:0}];renderKBPositionen();}
+    }
+    if(id==='mo-kunde'){
+      // Auto-generate next KD number
+      const nrEl=document.getElementById('k-nr');
+      if(nrEl&&!nrEl.value&&!document.getElementById('k-id').value){
+        const next=CKUNDEN.length+1;
+        nrEl.value='KD-'+String(next).padStart(4,'0');
+      }
+    }
+    _prevOpenMo(id);
+  };
+
+    // ── BEXIO EXPORT ──
   window.exportBexioArtikel=()=>{
     const rows=[['Artikelnummer','Bezeichnung','Kategorie','Einheit','Einkaufspreis','Verkaufspreis','Bestand','Lagerort']];
     CA.forEach(a=>{
