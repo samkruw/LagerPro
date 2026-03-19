@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LagerPro – Lagerverwaltung</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue:#4567b7;--blue-dark:#3450a0;--blue-light:#eef2fb;--blue-mid:#c8d5f0;
+    --white:#ffffff;--gray-50:#f8f9fb;--gray-100:#f0f2f7;--gray-200:#e2e6ef;
+    --gray-300:#c9cfdd;--gray-500:#8892a4;--gray-700:#4a5568;--gray-900:#1a202c;
+    --green:#22a869;--green-light:#e8f7f0;--red:#e53e3e;--red-light:#fff0f0;
+    --amber:#d97706;--amber-light:#fef3cd;
+    --nav-w:220px;--header-h:56px;--radius:8px;
+    --shadow:0 1px 3px rgba(69,103,183,.08),0 1px 2px rgba(0,0,0,.04);
+    --shadow-md:0 4px 16px rgba(69,103,183,.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Open Sans',sans-serif;background:var(--gray-50);color:var(--gray-900);font-size:14px}
+
+  /* CONFIG */
+  #config-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--blue-dark) 0%,var(--blue) 100%)}
+  .config-box{background:#fff;border-radius:16px;padding:40px 36px;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+  .config-box h2{font-size:20px;font-weight:700;color:var(--blue);margin-bottom:6px}
+  .config-box p{font-size:13px;color:var(--gray-500);margin-bottom:24px;line-height:1.6}
+  .cfg-fields{display:flex;flex-direction:column;gap:16px}
+  .cfg-fields label{font-size:12px;font-weight:600;color:var(--gray-700);margin-bottom:3px;display:block}
+  .cfg-fields input,.cfg-fields textarea{width:100%;padding:10px 14px;border:1.5px solid var(--gray-300);border-radius:8px;font-family:inherit;font-size:13px;transition:border .15s}
+  .cfg-fields input:focus,.cfg-fields textarea:focus{outline:none;border-color:var(--blue)}
+  .cfg-fields textarea{font-family:monospace;font-size:11px;min-height:130px;resize:vertical}
+  .cfg-hint{font-size:11px;color:var(--gray-500);margin-top:3px}
+  .cfg-note{background:var(--blue-light);color:var(--blue-dark);padding:10px 14px;border-radius:6px;font-size:11px;line-height:1.6}
+  .cfg-note code{background:rgba(69,103,183,.08);padding:1px 4px;border-radius:3px;font-size:10px}
+  .cfg-err{background:var(--red-light);color:#7a1515;padding:10px 14px;border-radius:6px;font-size:13px;display:none}
+
+  /* LOGIN */
+  #login-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--blue-dark) 0%,var(--blue) 100%)}
+  .login-box{background:#fff;border-radius:16px;padding:40px 36px;width:100%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+  .login-logo{font-size:26px;font-weight:700;color:var(--blue);margin-bottom:2px}
+  .login-logo span{opacity:.55;font-weight:400}
+  .login-sub{font-size:13px;color:var(--gray-500);margin-bottom:24px}
+  .login-tabs{display:flex;border-bottom:2px solid var(--gray-200);margin-bottom:22px}
+  .login-tab{padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-500);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
+  .login-tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+  .lform{display:flex;flex-direction:column;gap:14px}
+  .lform label{font-size:12px;font-weight:600;color:var(--gray-700);margin-bottom:3px;display:block}
+  .lform input,.lform select{width:100%;padding:10px 14px;border:1.5px solid var(--gray-300);border-radius:8px;font-family:inherit;font-size:13px;transition:border .15s;background:#fff}
+  .lform input:focus,.lform select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(69,103,183,.1)}
+  .btn-login{background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;width:100%;font-family:inherit;transition:background .15s}
+  .btn-login:hover{background:var(--blue-dark)}
+  .l-err{background:var(--red-light);color:#7a1515;border-left:3px solid var(--red);padding:10px 14px;border-radius:6px;font-size:13px;display:none}
+  .l-suc{background:var(--green-light);color:#14533a;border-left:3px solid var(--green);padding:10px 14px;border-radius:6px;font-size:13px;display:none}
+  .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* APP */
+  #app-screen{display:none}
+  header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--blue);color:#fff;display:flex;align-items:center;padding:0 20px;gap:14px;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  .logo{font-size:20px;font-weight:700;letter-spacing:-.5px}
+  .logo span{opacity:.65;font-weight:400}
+  .spacer{flex:1}
+  .sync-pill{display:flex;align-items:center;gap:6px;font-size:12px;opacity:.85}
+  .sync-dot{width:8px;height:8px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite}
+  .sync-dot.off{background:var(--amber);animation:none}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .user-pill{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);border-radius:20px;padding:4px 12px 4px 4px;font-size:13px}
+  .av{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px}
+  .hbadge{background:rgba(255,255,255,.2);border-radius:10px;padding:2px 8px;font-size:11px;font-weight:600;margin-left:6px}
+  .btn-out{background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 12px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;transition:background .15s}
+  .btn-out:hover{background:rgba(255,255,255,.25)}
+  nav{position:fixed;top:var(--header-h);left:0;bottom:0;width:var(--nav-w);background:#fff;border-right:1px solid var(--gray-200);display:flex;flex-direction:column;z-index:50;overflow-y:auto}
+  .nav-section{padding:16px 12px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gray-500)}
+  nav a{display:flex;align-items:center;gap:10px;padding:9px 14px;margin:2px 8px;border-radius:var(--radius);cursor:pointer;text-decoration:none;color:var(--gray-700);font-size:13.5px;font-weight:500;transition:all .15s}
+  nav a:hover{background:var(--blue-light);color:var(--blue)}
+  nav a.active{background:var(--blue-light);color:var(--blue);font-weight:600}
+  nav a .ico{width:18px;text-align:center;font-size:15px}
+  nav a .cnt{margin-left:auto;background:var(--blue);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:600}
+  .nav-info{margin:8px 12px 0;background:var(--blue-light);border-radius:6px;padding:8px 10px;font-size:11px;color:var(--blue-dark)}
+  .nav-info strong{display:block;font-size:12px;font-weight:700;margin-bottom:1px}
+  main{margin-left:var(--nav-w);margin-top:var(--header-h);padding:24px;min-height:calc(100vh - var(--header-h))}
+  .page{display:none}
+  .page.active{display:block}
+  .ph{display:flex;align-items:center;gap:12px;margin-bottom:24px}
+  .ph h1{font-size:22px;font-weight:700}
+  .ph .sub{font-size:13px;color:var(--gray-500);margin-top:2px}
+  .ph .spacer{flex:1}
+  .card{background:#fff;border-radius:var(--radius);border:1px solid var(--gray-200);box-shadow:var(--shadow);overflow:hidden}
+  .ch{padding:14px 18px;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;gap:10px}
+  .ch h2{font-size:14px;font-weight:600}
+  .cb{padding:18px}
+  .sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+  .sc{background:#fff;border-radius:var(--radius);border:1px solid var(--gray-200);padding:18px 20px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
+  .sc .sl{font-size:12px;color:var(--gray-500);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+  .sc .sv{font-size:26px;font-weight:700}
+  .tw{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{text-align:left;padding:10px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-500);background:var(--gray-50);border-bottom:1px solid var(--gray-200)}
+  td{padding:11px 14px;border-bottom:1px solid var(--gray-100);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--blue-light)}
+  .te{text-align:center;padding:40px;color:var(--gray-500)}
+  .badge{display:inline-flex;align-items:center;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600}
+  .bg{background:var(--green-light);color:#166a43}
+  .br{background:var(--red-light);color:#9b1616}
+  .ba{background:var(--amber-light);color:#92520a}
+  .bb{background:var(--blue-light);color:var(--blue-dark)}
+  .bgr{background:var(--gray-100);color:var(--gray-700)}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:inherit}
+  .bp{background:var(--blue);color:#fff}.bp:hover{background:var(--blue-dark)}
+  .bo{background:#fff;color:var(--blue);border:1px solid var(--blue)}.bo:hover{background:var(--blue-light)}
+  .bs{padding:5px 11px;font-size:12px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .fg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+  .fgr{display:flex;flex-direction:column;gap:5px}
+  label{font-size:12px;font-weight:600;color:var(--gray-700)}
+  input,select,textarea{padding:8px 12px;border-radius:6px;border:1px solid var(--gray-300);font-family:inherit;font-size:13px;color:var(--gray-900);background:#fff;transition:border .15s;width:100%}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(69,103,183,.12)}
+  .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center}
+  .mo.open{display:flex}
+  .mb{background:#fff;border-radius:12px;box-shadow:var(--shadow-md);width:90%;max-width:520px;max-height:90vh;overflow-y:auto}
+  .mh{padding:18px 22px;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between}
+  .mh h3{font-size:16px;font-weight:700}
+  .mc{background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray-500);line-height:1}
+  .mbo{padding:22px}
+  .mf{padding:16px 22px;border-top:1px solid var(--gray-200);display:flex;gap:10px;justify-content:flex-end}
+  .sb{position:relative}
+  .sb input{padding-left:34px;max-width:280px}
+  .sb::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px}
+  .pr{background:var(--gray-200);border-radius:4px;height:6px;overflow:hidden}
+  .prb{height:100%;border-radius:4px;transition:width .4s}
+  .prb.g{background:var(--green)}.prb.a{background:var(--amber)}.prb.r{background:var(--red)}
+  .al{padding:12px 16px;border-radius:var(--radius);font-size:13px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start}
+  .ala{background:var(--amber-light);color:#78440a;border-left:3px solid var(--amber)}
+  .alg{background:var(--green-light);color:#14533a;border-left:3px solid var(--green)}
+  .alr{background:var(--red-light);color:#7a1515;border-left:3px solid var(--red)}
+  .tabs{display:flex;border-bottom:2px solid var(--gray-200);margin-bottom:20px}
+  .tab{padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;color:var(--gray-500);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
+  .tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+  .tbc{display:none}.tbc.active{display:block}
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:900px){.g2{grid-template-columns:1fr}}
+  .kr{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100)}
+  .kr:last-child{border-bottom:none}
+  .kl{flex:1;font-size:13px}
+  .kv{font-size:13px;font-weight:600}
+  .tag{background:var(--blue-light);color:var(--blue-dark);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+  .tr{color:var(--gray-500)}.fw{font-weight:600}
+  .tb{color:var(--blue)}.tg{color:var(--green)}.trd{color:var(--red)}
+  .mt{margin-top:16px}.mt2{margin-top:24px}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
+  .dg{background:var(--green)}.da{background:var(--amber)}.dr{background:var(--red)}
+  .toast-wrap{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px}
+  .toast{padding:11px 16px;border-radius:8px;font-size:13px;box-shadow:var(--shadow-md);
+    transform:translateX(120%);opacity:0;transition:all .3s;max-width:320px}
+  .toast.show{transform:translateX(0);opacity:1}
+  .toast.g{background:#fff;border-left:3px solid var(--green);color:var(--gray-900)}
+  .toast.a{background:#fff;border-left:3px solid var(--amber);color:var(--gray-900)}
+  .toast.r{background:#fff;border-left:3px solid var(--red);color:var(--gray-900)}
+  .loader{position:fixed;inset:0;background:rgba(255,255,255,.9);z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;font-size:14px;color:var(--gray-700)}
+  .ls{width:38px;height:38px;border:3px solid var(--blue-mid);border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite}
+  .conflict{position:fixed;top:70px;left:50%;transform:translateX(-50%) translateY(-80px);background:#1a202c;color:#fff;
+    padding:10px 20px;border-radius:20px;font-size:13px;z-index:400;transition:transform .3s;white-space:nowrap}
+  .conflict.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- ── CONFIG ── -->
+<div id="config-screen">
+  <div class="config-box">
+    <h2>🔧 LagerPro einrichten</h2>
+    <p>Einmalige Firebase-Konfiguration. Daten werden lokal im Browser gespeichert.<br>
+    Firebase Console → Projekteinstellungen → Deine Apps → Config kopieren.</p>
+    <div class="cfg-fields">
+      <div>
+        <label>Firebase Config JSON</label>
+        <textarea id="cfg-json" placeholder='{
+  "apiKey": "AIza...",
+  "authDomain": "mein-projekt.firebaseapp.com",
+  "projectId": "mein-projekt",
+  "storageBucket": "mein-projekt.appspot.com",
+  "messagingSenderId": "123456789",
+  "appId": "1:123:web:abc"
+}'></textarea>
+      </div>
+      <div>
+        <label>Kunden-ID <span style="font-weight:400;color:var(--gray-500)">(Mandanten-Schlüssel)</span></label>
+        <input id="cfg-kunde" placeholder="z.B. firma-ag-kloten" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9-]/g,'-')">
+        <div class="cfg-hint">Nur Kleinbuchstaben, Zahlen, Bindestriche. Alle Nutzer dieses Kunden teilen dieselbe Datenbank.</div>
+      </div>
+      <div class="cfg-note">
+        💡 <strong>Firestore Security Rules</strong> — in Firebase Console einfügen:<br><br>
+        <code>rules_version = '2';</code><br>
+        <code>service cloud.firestore {</code><br>
+        <code>&nbsp;match /databases/{db}/documents {</code><br>
+        <code>&nbsp;&nbsp;match /kunden/{kid}/{col}/{doc} {</code><br>
+        <code>&nbsp;&nbsp;&nbsp;allow read, write: if request.auth != null;</code><br>
+        <code>&nbsp;&nbsp;}</code><br>
+        <code>&nbsp;}</code><br>
+        <code>}</code>
+      </div>
+      <div class="cfg-err" id="cfg-err"></div>
+      <button class="btn-login" onclick="saveConfig()">✅ Speichern &amp; starten</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── LOGIN ── -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Lager<span>Pro</span></div>
+    <div class="login-sub" id="lsub">Mandant wird geladen…</div>
+    <div class="login-tabs">
+      <div class="login-tab active" onclick="ltab('login')">Anmelden</div>
+      <div class="login-tab" onclick="ltab('reg')">Registrieren</div>
+    </div>
+    <div id="t-login">
+      <div class="lform">
+        <div><label>E-Mail</label><input type="email" id="le" placeholder="max@firma.ch" autocomplete="username"></div>
+        <div><label>Passwort</label><input type="password" id="lp" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+        <div class="l-err" id="lerr"></div>
+        <button class="btn-login" id="btnl" onclick="doLogin()">Anmelden</button>
+        <div style="text-align:center;margin-top:8px">
+          <a href="#" onclick="doReset()" style="font-size:12px;color:var(--gray-500)">Passwort vergessen?</a>
+          &nbsp;·&nbsp;<a href="#" onclick="showCfg()" style="font-size:12px;color:var(--gray-500)">⚙️ Config</a>
+        </div>
+      </div>
+    </div>
+    <div id="t-reg" style="display:none">
+      <div class="lform">
+        <div><label>Name</label><input type="text" id="rn" placeholder="Max Muster"></div>
+        <div><label>E-Mail</label><input type="email" id="re" placeholder="max@firma.ch"></div>
+        <div><label>Passwort (min. 6 Zeichen)</label><input type="password" id="rp" placeholder="••••••••"></div>
+        <div><label>Rolle</label>
+          <select id="rr"><option value="benutzer">Benutzer (Lager &amp; Inventur)</option><option value="admin">Admin (Vollzugriff)</option></select>
+        </div>
+        <div class="l-err" id="rerr"></div>
+        <div class="l-suc" id="rsuc"></div>
+        <button class="btn-login" id="btnr" onclick="doReg()">Konto erstellen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app-screen">
+  <header>
+    <div class="logo">Lager<span>Pro</span></div>
+    <span id="hkunde" style="font-size:12px;opacity:.7;background:rgba(255,255,255,.15);padding:2px 10px;border-radius:4px"></span>
+    <div class="spacer"></div>
+    <div class="sync-pill"><span class="sync-dot" id="sdot"></span><span id="slbl" style="font-size:12px">Live</span></div>
+    <div class="user-pill">
+      <div class="av" id="hav">?</div>
+      <span id="hname">–</span>
+      <span class="hbadge" id="hrole">–</span>
+    </div>
+    <button class="btn-out" onclick="doLogout()">Abmelden</button>
+  </header>
+
+  <nav>
+    <div class="nav-info"><strong id="nkunde">–</strong>🏢 Mandant</div>
+    <div class="nav-section">Übersicht</div>
+    <a class="active" onclick="showPage('dash')"><span class="ico">📊</span>Dashboard</a>
+    <a onclick="showPage('artikel')"><span class="ico">📦</span>Artikel<span class="cnt" id="cnt-a">0</span></a>
+    <a onclick="showPage('lager')"><span class="ico">🏭</span>Lagerbestand</a>
+    <a onclick="showPage('inventur')"><span class="ico">📋</span>Inventur</a>
+    <div class="nav-section">Lieferkette</div>
+    <a onclick="showPage('lieferanten')"><span class="ico">🚚</span>Lieferanten</a>
+    <a onclick="showPage('bestellungen')"><span class="ico">🛒</span>Bestellungen<span class="cnt" id="cnt-b">0</span></a>
+    <a onclick="showPage('lieferungen')"><span class="ico">📬</span>Lieferungen</a>
+    <div class="nav-section">Auswertung</div>
+    <a onclick="showPage('berichte')"><span class="ico">📈</span>Berichte</a>
+    <a onclick="showPage('aktivitaet')"><span class="ico">🕐</span>Aktivitätslog</a>
+    <div class="nav-section">System</div>
+    <a onclick="showPage('kategorien')"><span class="ico">🏷️</span>Kategorien</a>
+    <a onclick="showPage('benutzer')" id="nav-usr"><span class="ico">👥</span>Benutzer</a>
+    <a onclick="showPage('einstellungen')"><span class="ico">⚙️</span>Einstellungen</a>
+  </nav>
+
+  <main>
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dash">
+      <div class="ph"><div><h1>Dashboard</h1><div class="sub" id="ddatum">–</div></div><div class="spacer"></div>
+        <button class="btn bp" onclick="renderDash()">🔄</button></div>
+      <div id="dwarn"></div>
+      <div class="sg">
+        <div class="sc"><div style="font-size:22px">📦</div><div class="sl">Artikel</div><div class="sv" id="da">–</div></div>
+        <div class="sc"><div style="font-size:22px">🏭</div><div class="sl">Kritischer Bestand</div><div class="sv trd" id="dk">–</div></div>
+        <div class="sc"><div style="font-size:22px">🛒</div><div class="sl">Offene Bestellungen</div><div class="sv" id="db">–</div></div>
+        <div class="sc"><div style="font-size:22px">💰</div><div class="sl">Lagerwert inkl. MWST</div><div class="sv tb" id="dw">–</div></div>
+      </div>
+      <div class="g2">
+        <div class="card"><div class="ch"><h2>📉 Tiefbestand</h2></div><div class="cb" id="dtief">Lädt…</div></div>
+        <div class="card"><div class="ch"><h2>📦 Lagerorte</h2></div><div class="cb" id="dlager">Lädt…</div></div>
+      </div>
+      <div class="card mt2" id="nachbestellungs-card" style="display:none">
+        <div class="ch"><h2>🔔 Nachbestellungs-Vorschläge</h2><div class="spacer"></div>
+          <button class="btn bp bs" onclick="bestelleAlle()">📧 Alle bestellen</button>
+        </div>
+        <div class="cb" id="dnachbestellung"></div>
+      </div>
+    </div>
+
+    <!-- ARTIKEL -->
+    <div class="page" id="page-artikel">
+      <div class="ph"><div><h1>Artikel</h1><div class="sub">Echtzeit synchronisiert</div></div><div class="spacer"></div>
+        <select id="akatfilter" onchange="filterA()" style="max-width:160px;padding:7px 10px;font-size:13px"><option value="">Alle Kategorien</option></select>
+        <div class="sb"><input type="text" placeholder="Suchen…" id="asearch" oninput="filterA()"></div>
+        <button class="btn bp" onclick="openMo('mo-artikel')">+ Neuer Artikel</button>
+      </div>
+      <div class="card"><div class="tw">
+        <table><thead><tr><th>Nr.</th><th>Bezeichnung</th><th>Kategorie</th><th>Einheit</th><th>EK exkl.</th><th>VK exkl.</th><th>Bestand</th><th>Mindest</th><th>Lager</th><th>Status</th><th>Aktionen</th></tr></thead>
+        <tbody id="atbody"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- LAGER -->
+    <div class="page" id="page-lager">
+      <div class="ph"><div><h1>Lagerbestand</h1></div><div class="spacer"></div>
+        <button class="btn bo" onclick="exportCSV()">⬇ CSV</button>
+        <button class="btn bp" onclick="openMo('mo-bew')">+ Lagerbewegung</button>
+      </div>
+      <div class="card"><div class="tw">
+        <table><thead><tr><th>Nr.</th><th>Bezeichnung</th><th>Lagerort</th><th>Bestand</th><th>Mindest</th><th>Auslastung</th><th>Status</th></tr></thead>
+        <tbody id="ltbody"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- INVENTUR -->
+    <div class="page" id="page-inventur">
+      <div class="ph"><div><h1>Inventur</h1></div><div class="spacer"></div>
+        <button class="btn bp" onclick="startInv()">🔍 Neue Inventur</button></div>
+      <div class="card">
+        <div class="ch"><h2>Aktuelle Inventur</h2><div class="spacer"></div><span class="badge ba">Laufend</span></div>
+        <div class="tw"><table><thead><tr><th>Nr.</th><th>Bezeichnung</th><th>Soll</th><th>Ist</th><th>Abweichung</th><th>Von</th><th>Status</th></tr></thead>
+        <tbody id="itbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- LIEFERANTEN -->
+    <div class="page" id="page-lieferanten">
+      <div class="ph"><div><h1>Lieferanten</h1></div><div class="spacer"></div>
+        <button class="btn bp" onclick="openMo('mo-lf')">+ Neuer Lieferant</button></div>
+      <div class="card"><div class="tw">
+        <table><thead><tr><th>Firma</th><th>Kontakt</th><th>PLZ / Ort</th><th>Tel.</th><th>Lieferzeit</th><th>Aktionen</th></tr></thead>
+        <tbody id="lftbody"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- BESTELLUNGEN -->
+    <div class="page" id="page-bestellungen">
+      <div class="ph"><div><h1>Bestellungen</h1></div><div class="spacer"></div>
+        <button class="btn bp" onclick="openMo('mo-best')">+ Neue Bestellung</button></div>
+      <div class="card"><div class="tw">
+        <table><thead><tr><th>Nr.</th><th>Lieferant</th><th>Artikel</th><th>Menge</th><th>Exkl.</th><th>MWST 7.7%</th><th>Inkl.</th><th>Lieferdatum</th><th>Status</th><th></th></tr></thead>
+        <tbody id="btbody"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- LIEFERUNGEN -->
+    <div class="page" id="page-lieferungen">
+      <div class="ph"><div><h1>Lieferungen</h1></div><div class="spacer"></div>
+        <button class="btn bp" onclick="openMo('mo-lief')">+ Lieferung buchen</button></div>
+      <div class="card"><div class="tw">
+        <table><thead><tr><th>Nr.</th><th>Bestell-Nr.</th><th>Lieferant</th><th>Datum</th><th>Artikel</th><th>Menge</th><th>Lager</th><th>Gebucht von</th></tr></thead>
+        <tbody id="lietbody"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- BERICHTE -->
+    <div class="page" id="page-berichte">
+      <div class="ph"><div><h1>Berichte</h1></div></div>
+      <div class="tabs">
+        <div class="tab active" onclick="stab(this,'tb-lager')">Lagerbericht</div>
+        <div class="tab" onclick="stab(this,'tb-lk')">Lieferkette</div>
+      </div>
+      <div class="tbc active" id="tb-lager">
+        <div class="g2">
+          <div class="card"><div class="ch"><h2>Top Artikel</h2></div><div class="cb" id="topbars"></div></div>
+          <div class="card"><div class="ch"><h2>Lagerwert CHF</h2></div><div class="cb" id="wertsum"></div></div>
+        </div>
+      </div>
+      <div class="tbc" id="tb-lk">
+        <div class="card"><div class="ch"><h2>Offene &amp; überfällige Bestellungen</h2></div><div class="cb" id="lkrep"></div></div>
+      </div>
+    </div>
+
+    <!-- BENUTZER -->
+    <div class="page" id="page-benutzer">
+      <div class="ph"><div><h1>Benutzer</h1><div class="sub">Nutzer dieses Mandanten</div></div></div>
+      <div class="card"><div class="tw">
+        <table><thead><tr><th>Name</th><th>E-Mail</th><th>Rolle</th><th>Erstellt</th></tr></thead>
+        <tbody id="usrtbody"></tbody></table>
+      </div></div>
+    </div>
+
+    <!-- EINSTELLUNGEN -->
+    <div class="page" id="page-einstellungen">
+      <div class="ph"><div><h1>Einstellungen</h1></div><div class="spacer"></div>
+        <button class="btn bp" onclick="saveSet()">💾 Speichern</button></div>
+      <div class="g2">
+        <div class="card"><div class="ch"><h2>🏢 Firmendaten</h2></div><div class="cb">
+          <div class="fg" style="grid-template-columns:1fr">
+            <div class="fgr"><label>Firmenname</label><input id="sf" placeholder="Firma AG"></div>
+            <div class="fgr"><label>Adresse</label><input id="sa" placeholder="Strasse 1, 8302 Kloten"></div>
+            <div class="fgr"><label>UID / MWST-Nr.</label><input id="su" placeholder="CHE-123.456.789 MWST"></div>
+            <div class="fgr"><label>IBAN</label><input id="siban" placeholder="CH56 0483 5012 3456 7800 9"></div>
+            <div class="fgr"><label>MWST-Satz</label><input value="7.7%" readonly style="background:var(--gray-100)"></div>
+          </div>
+        </div></div>
+        <div class="card"><div class="ch"><h2>ℹ️ Firebase Info</h2></div><div class="cb" id="cfginfo"></div></div>
+      </div>
+      <div class="card mt2">
+        <div class="ch"><h2>📧 E-Mail Benachrichtigungen (EmailJS)</h2><div class="spacer"></div>
+          <span id="emailjs-status" class="badge bgr" style="font-size:11px">Nicht konfiguriert</span>
+        </div>
+        <div class="cb">
+          <div style="background:var(--blue-light);border-radius:6px;padding:12px 14px;font-size:12px;color:var(--blue-dark);margin-bottom:16px;line-height:1.6">
+            💡 <strong>EmailJS Setup:</strong> Kostenlos bis 200 E-Mails/Monat · 
+            <a href="https://www.emailjs.com" target="_blank" style="color:var(--blue)">emailjs.com</a> →
+            Account → Service hinzufügen → Template erstellen → IDs hier eintragen
+          </div>
+          <div class="fg" style="grid-template-columns:1fr 1fr">
+            <div class="fgr"><label>EmailJS Public Key</label><input id="ejs-pk" placeholder="user_xxxxxxxxxxxx"></div>
+            <div class="fgr"><label>Service ID</label><input id="ejs-sid" placeholder="service_xxxxxxx"></div>
+            <div class="fgr"><label>Template ID (Bestand-Alert)</label><input id="ejs-tid" placeholder="template_xxxxxxx"></div>
+            <div class="fgr"><label>Alert-E-Mail (Empfänger)</label><input type="email" id="ejs-mail" placeholder="lager@firma.ch"></div>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+            <button class="btn bp bs" onclick="testEmail()">📧 Test-E-Mail senden</button>
+            <button class="btn bo bs" onclick="checkKritischUndSend()">🔔 Manuell prüfen &amp; alertieren</button>
+          </div>
+          <div style="margin-top:14px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:400">
+              <input type="checkbox" id="ejs-auto" style="width:auto;margin:0" onchange="saveEmailJSConfig()">
+              Automatisch E-Mail senden wenn Artikel kritischen Bestand erreicht
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="card mt2">
+        <div class="ch"><h2>📤 Bexio Export</h2></div>
+        <div class="cb">
+          <div style="background:var(--amber-light);border-radius:6px;padding:12px 14px;font-size:12px;color:#78440a;margin-bottom:16px">
+            ⚠️ <strong>Bexio-Export:</strong> Exportiert Artikel und Bestellungen als CSV im Bexio-Format. In Bexio importieren unter: <strong>Einstellungen → Datenimport</strong>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn bp bs" onclick="exportBexioArtikel()">⬇ Artikel → Bexio CSV</button>
+            <button class="btn bo bs" onclick="exportBexioBestellungen()">⬇ Bestellungen → Bexio CSV</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KATEGORIEN -->
+    <div class="page" id="page-kategorien">
+      <div class="ph"><div><h1>Kategorien</h1><div class="sub">Artikel-Kategorien verwalten</div></div><div class="spacer"></div>
+        <button class="btn bp" onclick="openMo('mo-kat')">+ Neue Kategorie</button>
+      </div>
+      <div class="g2">
+        <div class="card">
+          <div class="ch"><h2>&#127991; Alle Kategorien</h2></div>
+          <div class="tw"><table><thead><tr><th>Kategorie</th><th>Artikel</th><th>Farbe</th><th>Aktion</th></tr></thead>
+          <tbody id="kattbody"></tbody></table></div>
+        </div>
+        <div class="card">
+          <div class="ch"><h2>&#128202; Artikel pro Kategorie</h2></div>
+          <div class="cb" id="kat-stats"><div class="tr" style="padding:8px 0;font-size:13px">Wird geladen...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AKTIVITAETSLOG -->
+    <div class="page" id="page-aktivitaet">
+      <div class="ph"><div><h1>Aktivitätslog</h1><div class="sub">Wer hat was wann geändert &#8211; vollständiger Audit-Trail</div></div><div class="spacer"></div>
+        <button class="btn bo" onclick="exportAktCSV()">&#8595; CSV Export</button>
+      </div>
+      <div class="card">
+        <div class="tw"><table><thead><tr><th>Zeitpunkt</th><th>Nutzer</th><th>Aktion</th><th>Artikel</th><th>Details</th></tr></thead>
+        <tbody id="akttbody"></tbody></table></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- LOADER -->
+<div class="loader" id="loader"><div class="ls"></div><span id="ltxt">Verbinde…</span></div>
+<!-- CONFLICT BANNER -->
+<div class="conflict" id="conf"><span id="confmsg">🔄 Daten aktualisiert von anderem Nutzer</span></div>
+<!-- TOASTS -->
+<div class="toast-wrap" id="toastwrap"></div>
+
+<!-- ═══════════════ MODALS ═══════════════ -->
+<div class="mo" id="mo-artikel">
+  <div class="mb">
+    <div class="mh"><h3>📦 Artikel</h3><button class="mc" onclick="closeMo('mo-artikel')">×</button></div>
+    <div class="mbo">
+      <input type="hidden" id="a-id">
+      <div class="fg">
+        <div class="fgr"><label>Artikelnummer *</label><input id="a-nr" placeholder="ART-0001"></div>
+        <div class="fgr"><label>Einheit</label><select id="a-ei"><option>Stk.</option><option>Kg</option><option>Liter</option><option>Meter</option><option>Karton</option><option>Dose</option><option>Kan.</option></select></div>
+        <div class="fgr" style="grid-column:1/-1"><label>Bezeichnung *</label><input id="a-bz" placeholder="Bezeichnung"></div>
+        <div class="fgr" style="grid-column:1/-1"><label>Kategorie</label><select id="a-kat"><option value="">– Keine –</option></select></div>
+        <div class="fgr"><label>EK-Preis (CHF exkl.)</label><input type="number" id="a-ek" step="0.01" placeholder="0.00"></div>
+        <div class="fgr"><label>VK-Preis (CHF exkl.)</label><input type="number" id="a-vk" step="0.01" placeholder="0.00"></div>
+        <div class="fgr"><label>Lagerort</label><select id="a-lo"><option>A1</option><option>A2</option><option>A3</option><option>A4</option></select></div>
+        <div class="fgr"><label>Mindestbestand</label><input type="number" id="a-mn" value="50"></div>
+        <div class="fgr"><label>Anfangsbestand</label><input type="number" id="a-bs" value="0"></div>
+        <div class="fgr" style="grid-column:1/-1"><label>Beschreibung</label><textarea id="a-dc" rows="2"></textarea></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bo" onclick="closeMo('mo-artikel')">Abbrechen</button><button class="btn bp" onclick="saveArtikel()">💾 Speichern</button></div>
+  </div>
+</div>
+
+<div class="mo" id="mo-bew">
+  <div class="mb">
+    <div class="mh"><h3>🔄 Lagerbewegung</h3><button class="mc" onclick="closeMo('mo-bew')">×</button></div>
+    <div class="mbo">
+      <div class="fg">
+        <div class="fgr"><label>Artikel</label><select id="bwa"><option value="">– wählen –</option></select></div>
+        <div class="fgr"><label>Typ</label><select id="bwt"><option value="zugang">Zugang (+)</option><option value="abgang">Abgang (−)</option></select></div>
+        <div class="fgr"><label>Menge</label><input type="number" id="bwm" min="1" value="1"></div>
+        <div class="fgr"><label>Lagerort</label><select id="bwl"><option>A1</option><option>A2</option><option>A3</option><option>A4</option></select></div>
+        <div class="fgr" style="grid-column:1/-1"><label>Bemerkung</label><input id="bwb" placeholder="Optional"></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bo" onclick="closeMo('mo-bew')">Abbrechen</button><button class="btn bp" onclick="saveBew()">✅ Buchen</button></div>
+  </div>
+</div>
+
+<div class="mo" id="mo-lf">
+  <div class="mb">
+    <div class="mh"><h3>🚚 Lieferant</h3><button class="mc" onclick="closeMo('mo-lf')">×</button></div>
+    <div class="mbo">
+      <input type="hidden" id="lf-id">
+      <div class="fg">
+        <div class="fgr" style="grid-column:1/-1"><label>Firmenname *</label><input id="lfn" placeholder="Fischer AG"></div>
+        <div class="fgr"><label>Kontaktperson</label><input id="lfk" placeholder="Max Muster"></div>
+        <div class="fgr"><label>Telefon</label><input id="lft" placeholder="+41 44 000 00 00"></div>
+        <div class="fgr"><label>PLZ</label><input id="lfp" placeholder="8000"></div>
+        <div class="fgr"><label>Ort</label><input id="lfo" placeholder="Zürich"></div>
+        <div class="fgr"><label>Lieferzeit (Tage)</label><input type="number" id="lflt" value="3"></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bo" onclick="closeMo('mo-lf')">Abbrechen</button><button class="btn bp" onclick="saveLF()">💾 Speichern</button></div>
+  </div>
+</div>
+
+<div class="mo" id="mo-best">
+  <div class="mb">
+    <div class="mh"><h3>🛒 Bestellung</h3><button class="mc" onclick="closeMo('mo-best')">×</button></div>
+    <div class="mbo">
+      <div class="fg">
+        <div class="fgr"><label>Lieferant</label><select id="bes-lf"><option value="">– wählen –</option></select></div>
+        <div class="fgr"><label>Artikel</label><select id="bes-a"><option value="">– wählen –</option></select></div>
+        <div class="fgr"><label>Menge</label><input type="number" id="bes-m" value="100" min="1"></div>
+        <div class="fgr"><label>Einzelpreis exkl.</label><input type="number" id="bes-p" step="0.01" placeholder="0.00"></div>
+        <div class="fgr"><label>Lieferdatum</label><input type="date" id="bes-d"></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bo" onclick="closeMo('mo-best')">Abbrechen</button><button class="btn bp" onclick="saveBest()">📧 Bestellen</button></div>
+  </div>
+</div>
+
+<div class="mo" id="mo-lief">
+  <div class="mb">
+    <div class="mh"><h3>📬 Lieferung</h3><button class="mc" onclick="closeMo('mo-lief')">×</button></div>
+    <div class="mbo">
+      <div class="fg">
+        <div class="fgr"><label>Bestellung</label><select id="lie-b"><option value="">– wählen –</option></select></div>
+        <div class="fgr"><label>Lieferdatum</label><input type="date" id="lie-d"></div>
+        <div class="fgr"><label>Menge</label><input type="number" id="lie-m" min="1" value="1"></div>
+        <div class="fgr"><label>Einbuchen in</label><select id="lie-l"><option>A1</option><option>A2</option><option>A3</option><option>A4</option></select></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bo" onclick="closeMo('mo-lief')">Abbrechen</button><button class="btn bp" onclick="saveLief()">✅ Einbuchen</button></div>
+  </div>
+</div>
+
+<!-- ═══════════════ FIREBASE ═══════════════ -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,
+  signOut,onAuthStateChanged,sendPasswordResetEmail,updateProfile
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore,collection,doc,addDoc,setDoc,getDoc,getDocs,
+  deleteDoc,onSnapshot,query,orderBy,serverTimestamp,updateDoc
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ── UTILS ──
+const MWST=0.077;
+const chf=v=>'CHF '+Number(v).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,"'");
+const calcSt=(b,m)=>b<m*.2?'kritisch':b<m?'tief':'ok';
+const stBadge=s=>s==='kritisch'?'<span class="badge br">Kritisch</span>':s==='tief'?'<span class="badge ba">Tief</span>':'<span class="badge bg">OK</span>';
+let toastTimer={};
+function toast(msg,type='g'){
+  const w=document.getElementById('toastwrap');
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.textContent=(type==='g'?'✅ ':type==='r'?'❌ ':'⚠️ ')+msg;
+  w.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add('show'));
+  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300);},3200);
+}
+const load=(txt='')=>{const e=document.getElementById('loader');if(txt){document.getElementById('ltxt').textContent=txt;e.style.display='flex';}else e.style.display='none'};
+let confT;
+function showConf(msg='Daten wurden von einem anderen Nutzer geändert'){
+  document.getElementById('confmsg').textContent='🔄 '+msg;
+  const e=document.getElementById('conf');e.classList.add('show');
+  clearTimeout(confT);confT=setTimeout(()=>e.classList.remove('show'),3500);
+}
+
+// ── CONFIG ──
+window.saveConfig=()=>{
+  const raw=document.getElementById('cfg-json').value.trim();
+  const kid=document.getElementById('cfg-kunde').value.trim();
+  const err=document.getElementById('cfg-err');
+  if(!kid){err.style.display='block';err.textContent='Kunden-ID ist Pflicht.';return;}
+  let cfg;try{cfg=JSON.parse(raw);}catch{err.style.display='block';err.textContent='Ungültiges JSON.';return;}
+  if(!cfg.apiKey||!cfg.projectId){err.style.display='block';err.textContent='apiKey / projectId fehlen.';return;}
+  localStorage.setItem('lp_cfg',JSON.stringify({fb:cfg,kid}));
+  location.reload();
+};
+window.showCfg=()=>{
+  document.getElementById('app-screen').style.display='none';
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('config-screen').style.display='flex';
+};
+
+// ── BOOT ──
+const stored=()=>{try{return JSON.parse(localStorage.getItem('lp_cfg')||'null');}catch{return null;}};
+const cfg=stored();
+if(!cfg){
+  load();
+  document.getElementById('config-screen').style.display='flex';
+} else {
+  const app=initializeApp(cfg.fb);
+  const auth=getAuth(app);
+  const db=getFirestore(app);
+  const KID=cfg.kid;
+  load('Verbinde mit Firebase…');
+
+  // Expose globals for inline handlers
+  const G={auth,db,KID,cu:null,role:'benutzer'};
+  window._G=G;
+
+  const col=n=>collection(db,'kunden',KID,n);
+  const dref=(n,id)=>doc(db,'kunden',KID,n,id);
+  let CA=[],CLF=[],CB=[],CLIEF=[],CI=[],CUSR=[];
+  let unsub=[];
+
+  // ── AUTH STATE ──
+  onAuthStateChanged(auth,async user=>{
+    if(user){
+      load('Lade Daten…');
+      G.cu=user;
+      try{
+        const snap=await getDoc(dref('benutzer',user.uid));
+        G.role=snap.exists()?snap.data().rolle:'benutzer';
+      }catch{G.role='benutzer';}
+      initApp();
+      startSubs();
+      load();
+    } else {
+      unsub.forEach(u=>{try{u();}catch{}});unsub=[];
+      load();
+      document.getElementById('app-screen').style.display='none';
+      document.getElementById('config-screen').style.display='none';
+      document.getElementById('login-screen').style.display='flex';
+    }
+  });
+
+  // ── LOGIN TAB ──
+  window.ltab=id=>{
+    document.querySelectorAll('.login-tab').forEach(t=>t.classList.remove('active'));
+    ['login','reg'].forEach(k=>{const e=document.getElementById('t-'+k);if(e)e.style.display=k===id?'block':'none';});
+    document.querySelectorAll('.login-tab').forEach(t=>{if(t.getAttribute('onclick')?.includes("'"+id+"'"))t.classList.add('active');});
+  };
+
+  // ── DO LOGIN ──
+  window.doLogin=async()=>{
+    const e=document.getElementById('le').value.trim(),p=document.getElementById('lp').value;
+    const err=document.getElementById('lerr'),btn=document.getElementById('btnl');
+    err.style.display='none';btn.innerHTML='<span class="spinner"></span>…';btn.disabled=true;
+    try{await signInWithEmailAndPassword(auth,e,p);}
+    catch(ex){
+      const m={'auth/invalid-credential':'E-Mail oder Passwort falsch.','auth/user-not-found':'E-Mail nicht gefunden.','auth/wrong-password':'Falsches Passwort.','auth/too-many-requests':'Zu viele Versuche.','auth/invalid-email':'Ungültige E-Mail.'};
+      err.textContent=m[ex.code]||ex.message;err.style.display='block';
+      btn.innerHTML='Anmelden';btn.disabled=false;
+    }
+  };
+
+  // ── DO REGISTER ──
+  window.doReg=async()=>{
+    const n=document.getElementById('rn').value.trim(),e=document.getElementById('re').value.trim(),
+      p=document.getElementById('rp').value,r=document.getElementById('rr').value;
+    const err=document.getElementById('rerr'),suc=document.getElementById('rsuc'),btn=document.getElementById('btnr');
+    err.style.display='none';suc.style.display='none';
+    if(!n||!e||p.length<6){err.textContent='Name, E-Mail und Passwort (min. 6 Z.) ausfüllen.';err.style.display='block';return;}
+    btn.innerHTML='<span class="spinner"></span>…';btn.disabled=true;
+    try{
+      const cr=await createUserWithEmailAndPassword(auth,e,p);
+      await updateProfile(cr.user,{displayName:n});
+      await setDoc(dref('benutzer',cr.user.uid),{name:n,email:e,rolle:r,erstellt:serverTimestamp()});
+      suc.textContent='✅ Konto erstellt – du wirst automatisch angemeldet.';suc.style.display='block';
+    }catch(ex){
+      const m={'auth/email-already-in-use':'E-Mail bereits registriert.','auth/weak-password':'Passwort zu schwach.','auth/invalid-email':'Ungültige E-Mail.'};
+      err.textContent=m[ex.code]||ex.message;err.style.display='block';
+      btn.innerHTML='Konto erstellen';btn.disabled=false;
+    }
+  };
+
+  window.doReset=async()=>{
+    const e=document.getElementById('le').value.trim();
+    if(!e){alert('Bitte E-Mail eingeben.');return;}
+    try{await sendPasswordResetEmail(auth,e);toast('Reset-E-Mail gesendet');}
+    catch(ex){toast(ex.message,'r');}
+  };
+
+  window.doLogout=()=>signOut(auth);
+
+  // ── INIT APP ──
+  function initApp(){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('config-screen').style.display='none';
+    document.getElementById('app-screen').style.display='block';
+    const u=G.cu,nm=u.displayName||u.email.split('@')[0];
+    const ini=nm.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    document.getElementById('hav').textContent=ini;
+    document.getElementById('hname').textContent=nm;
+    document.getElementById('hrole').textContent=G.role==='admin'?'Admin':'Benutzer';
+    document.getElementById('hkunde').textContent=KID;
+    document.getElementById('nkunde').textContent=KID;
+    document.getElementById('lsub').textContent='Mandant: '+KID;
+    document.getElementById('ddatum').textContent=new Date().toLocaleDateString('de-CH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    if(G.role!=='admin')document.getElementById('nav-usr').style.display='none';
+    document.getElementById('cfginfo').innerHTML=`
+      <div class="kr"><span class="kl">Projekt-ID</span><span class="kv">${cfg.fb.projectId}</span></div>
+      <div class="kr"><span class="kl">Kunden-ID</span><span class="kv tb">${KID}</span></div>
+      <div class="kr"><span class="kl">Auth-Domain</span><span class="kv">${cfg.fb.authDomain}</span></div>
+      <button class="btn bo bs mt" onclick="showCfg()">⚙️ Config ändern</button>`;
+    loadSetDB();
+    loadEmailJSConfig();
+  }
+
+  // ── SUBSCRIPTIONS ──
+  function setSyncStatus(on){
+    document.getElementById('sdot').className='sync-dot'+(on?'':' off');
+    document.getElementById('slbl').textContent=on?'Live':'Offline';
+  }
+  function startSubs(){
+    setSyncStatus(true);
+    let prev={a:0,b:0};
+    const u1=onSnapshot(query(col('artikel'),orderBy('nr')),snap=>{
+      CA=snap.docs.map(d=>({id:d.id,...d.data()}));
+      if(prev.a&&!snap.metadata.hasPendingWrites&&snap.docChanges().some(c=>c.type==='modified'))showConf('Artikel aktualisiert');
+      prev.a++;renderCurr();updateCnts();autoEmailCheck();
+    },()=>setSyncStatus(false));
+    const u2=onSnapshot(query(col('lieferanten'),orderBy('name')),snap=>{CLF=snap.docs.map(d=>({id:d.id,...d.data()}));renderCurr();});
+    const u3=onSnapshot(query(col('bestellungen'),orderBy('erstellt','desc')),snap=>{
+      CB=snap.docs.map(d=>({id:d.id,...d.data()}));
+      if(prev.b&&!snap.metadata.hasPendingWrites&&snap.docChanges().some(c=>c.type==='modified'))showConf('Bestellungen aktualisiert');
+      prev.b++;renderCurr();updateCnts();
+    });
+    const u4=onSnapshot(query(col('lieferungen'),orderBy('erstellt','desc')),snap=>{CLIEF=snap.docs.map(d=>({id:d.id,...d.data()}));renderCurr();});
+    const u5=onSnapshot(query(col('inventur'),orderBy('nr')),snap=>{CI=snap.docs.map(d=>({id:d.id,...d.data()}));renderCurr();});
+    const u6=onSnapshot(col('benutzer'),snap=>{CUSR=snap.docs.map(d=>({id:d.id,...d.data()}));renderBenutzer();});
+    unsub=[u1,u2,u3,u4,u5,u6];
+    startKatSub();
+    startAktSub();
+  }
+  function updateCnts(){
+    document.getElementById('cnt-a').textContent=CA.length;
+    document.getElementById('cnt-b').textContent=CB.filter(b=>['Offen','Bestätigt','Überfällig'].includes(b.status)).length;
+  }
+
+  // ── ROUTING ──
+  let curP='dash';
+  window.showPage=id=>{
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.querySelectorAll('nav a').forEach(a=>a.classList.remove('active'));
+    document.getElementById('page-'+id).classList.add('active');
+    document.querySelectorAll('nav a').forEach(a=>{if(a.getAttribute('onclick')?.includes("'"+id+"'"))a.classList.add('active');});
+    curP=id;renderCurr();
+  };
+  function renderCurr(){
+    const m={dash:renderDash,artikel:renderArtikel,lager:renderLager,inventur:renderInv,
+      lieferanten:renderLF,bestellungen:renderBest,lieferungen:renderLief,berichte:renderBer,
+      benutzer:renderBenutzer,kategorien:()=>{renderKategorien();},aktivitaet:()=>{renderAkt();}};
+    if(m[curP])m[curP]();
+  }
+
+  // ── DASHBOARD ──
+  window.renderDash=()=>{
+    const krit=CA.filter(a=>a.status==='kritisch');
+    document.getElementById('da').textContent=CA.length;
+    document.getElementById('dk').textContent=krit.length;
+    document.getElementById('db').textContent=CB.filter(b=>['Offen','Bestätigt','Überfällig'].includes(b.status)).length;
+    const w=CA.reduce((s,a)=>s+(a.bestand||0)*(a.ek||0),0)*(1+MWST);
+    document.getElementById('dw').textContent=chf(w);
+    const tief=CA.filter(a=>a.status!=='ok').slice(0,6);
+    document.getElementById('dtief').innerHTML=tief.length
+      ?tief.map(a=>`<div class="kr"><span class="dot ${a.status==='kritisch'?'dr':'da'}"></span><span class="kl">${a.bez}</span><span class="kv ${a.status==='kritisch'?'trd':''}">${a.bestand||0} ${a.einheit||''}</span>${stBadge(a.status)}</div>`).join('')
+      :'<div style="padding:8px 0;color:var(--green)">✅ Alle OK</div>';
+    const lagerorte=['A1','A2','A3','A4'];
+    const cnt={};lagerorte.forEach(l=>cnt[l]=0);
+    CA.forEach(a=>{if(cnt[a.lagerort]!==undefined)cnt[a.lagerort]++;});
+    const maxC=Math.max(...Object.values(cnt),1);
+    document.getElementById('dlager').innerHTML=lagerorte.map(l=>{
+      const p=Math.round(cnt[l]/maxC*100);const c=p>80?'r':p>50?'a':'g';
+      return`<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:13px"><span class="fw">${l}</span><span class="tr">${cnt[l]} Artikel</span></div><div class="pr"><div class="prb ${c}" style="width:${p}%"></div></div></div>`;
+    }).join('');
+    const uebf=CB.filter(b=>b.status==='Überfällig');
+    renderNachbestellung();
+    document.getElementById('dwarn').innerHTML=[
+      krit.length?`<div class="al alr">⚠️ <strong>${krit.length} kritisch:</strong> ${krit.map(a=>a.bez).join(', ')}</div>`:'',
+      uebf.length?`<div class="al ala">🚚 ${uebf.length} Bestellung(en) überfällig</div>`:''
+    ].join('');
+  };
+
+  // ── ARTIKEL ──
+  function renderArtikel(f=''){
+    const data=CA.filter(a=>!f||a.nr?.toLowerCase().includes(f)||a.bez?.toLowerCase().includes(f));
+    document.getElementById('atbody').innerHTML=data.length
+      ?data.map(a=>`<tr>
+          <td><span class="tag">${a.nr||'–'}</span></td>
+          <td><strong>${a.bez||'–'}</strong></td><td>${a.einheit||'–'}</td>
+          <td>${chf(a.ek||0)}</td><td>${chf(a.vk||0)}</td>
+          <td class="${(a.bestand||0)<(a.min||0)?'trd fw':''}">${a.bestand||0}</td>
+          <td>${a.min||0}</td>
+          <td><span class="badge bgr">${a.lagerort||'–'}</span></td>
+          <td>${stBadge(a.status||'ok')}</td>
+          <td style="display:flex;gap:6px">
+            <button class="btn bo bs" onclick="editA('${a.id}')">✏️</button>
+            <button class="btn bo bs" style="color:var(--red)" onclick="delA('${a.id}','${(a.bez||'').replace(/'/g,"\\'")}')">🗑️</button>
+          </td>
+        </tr>`).join('')
+      :'<tr><td colspan="10" class="te">Noch keine Artikel – ersten erfassen</td></tr>';
+  }
+  window.filterA=()=>renderArtikel(document.getElementById('asearch').value.toLowerCase());
+
+  window.editA=id=>{
+    const a=CA.find(x=>x.id===id);if(!a)return;
+    document.getElementById('a-id').value=id;
+    document.getElementById('a-nr').value=a.nr||'';
+    document.getElementById('a-bz').value=a.bez||'';
+    document.getElementById('a-ek').value=a.ek||'';
+    document.getElementById('a-vk').value=a.vk||'';
+    document.getElementById('a-mn').value=a.min||50;
+    document.getElementById('a-bs').value=a.bestand||0;
+    document.getElementById('a-lo').value=a.lagerort||'A1';
+    document.getElementById('a-ei').value=a.einheit||'Stk.';
+    document.getElementById('a-dc').value=a.beschreibung||'';
+    const katEl=document.getElementById('a-kat');
+    if(katEl)katEl.value=a.katId||'';
+    openMo('mo-artikel');
+  };
+  window.delA=async(id,bez)=>{
+    if(!confirm(`"${bez}" löschen?`))return;
+    try{await deleteDoc(dref('artikel',id));toast('Artikel gelöscht');}
+    catch(e){toast(e.message,'r');}
+  };
+  window.saveArtikel=async()=>{
+    const id=document.getElementById('a-id').value;
+    const nr=document.getElementById('a-nr').value.trim();
+    const bez=document.getElementById('a-bz').value.trim();
+    if(!nr||!bez){alert('Nr. und Bezeichnung sind Pflicht.');return;}
+    const ek=parseFloat(document.getElementById('a-ek').value)||0;
+    const vk=parseFloat(document.getElementById('a-vk').value)||0;
+    const min=parseInt(document.getElementById('a-mn').value)||50;
+    const bestand=parseInt(document.getElementById('a-bs').value)||0;
+    const katId=document.getElementById('a-kat')?.value||'';
+    const data={nr,bez,ek,vk,min,bestand,katId,lagerort:document.getElementById('a-lo').value,
+      einheit:document.getElementById('a-ei').value,beschreibung:document.getElementById('a-dc').value,
+      status:calcSt(bestand,min),geaendertVon:G.cu.email,geaendert:serverTimestamp()};
+    try{
+      if(id)await updateDoc(dref('artikel',id),data);
+      else await addDoc(col('artikel'),{...data,erstellt:serverTimestamp(),erstelltVon:G.cu.email});
+      closeMo('mo-artikel');
+      document.getElementById('a-id').value='';
+      ['a-nr','a-bz','a-ek','a-vk','a-dc'].forEach(k=>document.getElementById(k).value='');
+      document.getElementById('a-mn').value='50';document.getElementById('a-bs').value='0';
+      toast(id?'Artikel aktualisiert':'Artikel gespeichert');
+    }catch(e){toast(e.message,'r');}
+  };
+
+  // ── LAGER ──
+  function renderLager(){
+    document.getElementById('ltbody').innerHTML=CA.length
+      ?CA.map(a=>{
+          const p=Math.min(Math.round((a.bestand||0)/(a.min||1)*100),100);
+          const c=p<20?'r':p<70?'a':'g';
+          return`<tr>
+            <td><span class="tag">${a.nr||'–'}</span></td><td>${a.bez||'–'}</td>
+            <td><span class="badge bgr">${a.lagerort||'–'}</span></td>
+            <td class="${(a.bestand||0)<(a.min||0)?'trd fw':''}">${a.bestand||0} ${a.einheit||''}</td>
+            <td>${a.min||0} ${a.einheit||''}</td>
+            <td><div style="display:flex;align-items:center;gap:8px;min-width:120px">
+              <div class="pr" style="flex:1"><div class="prb ${c}" style="width:${p}%"></div></div>
+              <span style="font-size:12px;color:var(--gray-500);min-width:30px">${p}%</span>
+            </div></td>
+            <td>${stBadge(a.status||'ok')}</td>
+          </tr>`;
+        }).join('')
+      :'<tr><td colspan="7" class="te">Keine Artikel</td></tr>';
+    const sel=document.getElementById('bwa');
+    if(sel)sel.innerHTML='<option value="">– wählen –</option>'+CA.map(a=>`<option value="${a.id}">${a.nr} – ${a.bez}</option>`).join('');
+  }
+  window.saveBew=async()=>{
+    const aid=document.getElementById('bwa').value;
+    const typ=document.getElementById('bwt').value;
+    const menge=parseInt(document.getElementById('bwm').value)||0;
+    if(!aid||!menge){alert('Artikel und Menge angeben.');return;}
+    const a=CA.find(x=>x.id===aid);if(!a)return;
+    const delta=typ==='zugang'?menge:-menge;
+    const neu=Math.max(0,(a.bestand||0)+delta);
+    try{
+      await updateDoc(dref('artikel',aid),{bestand:neu,status:calcSt(neu,a.min||50),geaendertVon:G.cu.email,geaendert:serverTimestamp()});
+      await addDoc(col('bewegungen'),{artikelId:aid,nr:a.nr,bez:a.bez,typ,menge,delta,
+        lagerort:document.getElementById('bwl').value,bemerkung:document.getElementById('bwb').value,
+        erstellt:serverTimestamp(),erstelltVon:G.cu.email});
+      closeMo('mo-bew');toast('Lagerbewegung gebucht ('+( delta>0?'+':'')+delta+' '+a.einheit+')');
+    }catch(e){toast(e.message,'r');}
+  };
+
+  // ── INVENTUR ──
+  function renderInv(){
+    document.getElementById('itbody').innerHTML=CI.length
+      ?CI.map(i=>{const d=(i.ist||0)-(i.soll||0);return`<tr>
+          <td><span class="tag">${i.nr||'–'}</span></td><td>${i.bez||'–'}</td>
+          <td>${i.soll||0}</td><td>${i.ist||0}</td>
+          <td class="${d===0?'tr':d<0?'trd fw':'tg fw'}">${d===0?'–':(d>0?'+':'')+d}</td>
+          <td>${i.erfasstVon||'–'}</td>
+          <td>${d===0?'<span class="badge bg">OK</span>':'<span class="badge br">Abweichung</span>'}</td>
+        </tr>`;}).join('')
+      :'<tr><td colspan="7" class="te">Keine Inventur aktiv</td></tr>';
+  }
+  window.startInv=async()=>{
+    if(!confirm('Neue Inventur aus aktuellem Bestand erstellen?'))return;
+    try{
+      const old=await getDocs(col('inventur'));
+      await Promise.all(old.docs.map(d=>deleteDoc(d.ref)));
+      await Promise.all(CA.map(a=>addDoc(col('inventur'),{nr:a.nr,bez:a.bez,soll:a.bestand||0,ist:a.bestand||0,
+        erfasstVon:G.cu.displayName||G.cu.email,erstellt:serverTimestamp()})));
+      toast('Inventur gestartet – '+CA.length+' Artikel');
+    }catch(e){toast(e.message,'r');}
+  };
+
+  // ── LIEFERANTEN ──
+  function renderLF(){
+    document.getElementById('lftbody').innerHTML=CLF.length
+      ?CLF.map(l=>`<tr>
+          <td><strong>${l.name||'–'}</strong></td><td>${l.kontakt||'–'}</td>
+          <td>${l.plz||''} ${l.ort||''}</td><td>${l.tel||'–'}</td><td>${l.lt||'?'} Tage</td>
+          <td style="display:flex;gap:6px">
+            <button class="btn bo bs" onclick="editLF('${l.id}')">✏️</button>
+            <button class="btn bo bs" style="color:var(--red)" onclick="delLF('${l.id}','${(l.name||'').replace(/'/g,"\\'")}')">🗑️</button>
+          </td>
+        </tr>`).join('')
+      :'<tr><td colspan="6" class="te">Noch keine Lieferanten</td></tr>';
+    const sel=document.getElementById('bes-lf');
+    if(sel)sel.innerHTML='<option value="">– wählen –</option>'+CLF.map(l=>`<option>${l.name}</option>`).join('');
+  }
+  window.editLF=id=>{
+    const l=CLF.find(x=>x.id===id);if(!l)return;
+    document.getElementById('lf-id').value=id;
+    ['lfn','lfk','lft','lfp','lfo','lflt'].forEach((k,i)=>{
+      const keys=['name','kontakt','tel','plz','ort','lt'];
+      const e=document.getElementById(k);if(e)e.value=l[keys[i]]||'';
+    });
+    openMo('mo-lf');
+  };
+  window.delLF=async(id,name)=>{if(!confirm(`"${name}" löschen?`))return;try{await deleteDoc(dref('lieferanten',id));toast('Lieferant gelöscht');}catch(e){toast(e.message,'r');}};
+  window.saveLF=async()=>{
+    const id=document.getElementById('lf-id').value;
+    const name=document.getElementById('lfn').value.trim();
+    if(!name){alert('Firmenname ist Pflicht.');return;}
+    const data={name,kontakt:document.getElementById('lfk').value,tel:document.getElementById('lft').value,
+      plz:document.getElementById('lfp').value,ort:document.getElementById('lfo').value,
+      lt:parseInt(document.getElementById('lflt').value)||3,geaendertVon:G.cu.email,geaendert:serverTimestamp()};
+    try{
+      if(id)await updateDoc(dref('lieferanten',id),data);
+      else await addDoc(col('lieferanten'),{...data,erstellt:serverTimestamp()});
+      document.getElementById('lf-id').value='';closeMo('mo-lf');toast('Lieferant gespeichert');
+    }catch(e){toast(e.message,'r');}
+  };
+
+  // ── BESTELLUNGEN ──
+  function renderBest(){
+    document.getElementById('btbody').innerHTML=CB.length
+      ?CB.map(b=>{
+          const mw=(b.preis||0)*MWST,tot=(b.preis||0)+mw;
+          const st=b.status==='Offen'?'<span class="badge bb">Offen</span>':b.status==='Bestätigt'?'<span class="badge bg">Bestätigt</span>':b.status==='Überfällig'?'<span class="badge br">Überfällig</span>':'<span class="badge bgr">'+b.status+'</span>';
+          return`<tr><td><span class="tag">${b.nr||'–'}</span></td><td>${b.lf||'–'}</td><td>${b.artikel||'–'}</td>
+            <td>${b.menge||0}</td><td>${chf(b.preis||0)}</td><td>${chf(mw)}</td>
+            <td class="fw">${chf(tot)}</td><td>${b.datum||'–'}</td><td>${st}</td>
+            <td><button class="btn bo bs" onclick="nextStatus('${b.id}','${b.status}')">▶</button></td>
+          </tr>`;
+        }).join('')
+      :'<tr><td colspan="10" class="te">Noch keine Bestellungen</td></tr>';
+    const sa=document.getElementById('bes-a');
+    if(sa)sa.innerHTML='<option value="">– wählen –</option>'+CA.map(a=>`<option>${a.bez}</option>`).join('');
+    const dt=document.getElementById('bes-d');
+    if(dt&&!dt.value){const d=new Date();d.setDate(d.getDate()+7);dt.value=d.toISOString().split('T')[0];}
+  }
+  window.nextStatus=async(id,cur)=>{
+    const seq=['Offen','Bestätigt','Überfällig','Abgeschlossen'];
+    const nxt=seq[(seq.indexOf(cur)+1)%seq.length];
+    try{await updateDoc(dref('bestellungen',id),{status:nxt,geaendertVon:G.cu.email,geaendert:serverTimestamp()});toast('Status → '+nxt);}
+    catch(e){toast(e.message,'r');}
+  };
+  window.saveBest=async()=>{
+    const lf=document.getElementById('bes-lf').value,art=document.getElementById('bes-a').value;
+    const m=parseInt(document.getElementById('bes-m').value)||0,p=parseFloat(document.getElementById('bes-p').value)||0;
+    const d=document.getElementById('bes-d').value;
+    if(!lf||!art||!m){alert('Pflichtfelder ausfüllen.');return;}
+    const nr='BST-'+new Date().getFullYear()+'-'+String(CB.length+1).padStart(3,'0');
+    try{
+      await addDoc(col('bestellungen'),{nr,lf,artikel:art,menge:m,preis:p,datum:d,status:'Offen',erstellt:serverTimestamp(),erstelltVon:G.cu.email});
+      closeMo('mo-best');toast('Bestellung aufgegeben');
+    }catch(e){toast(e.message,'r');}
+  };
+
+  // ── LIEFERUNGEN ──
+  function renderLief(){
+    document.getElementById('lietbody').innerHTML=CLIEF.length
+      ?CLIEF.map(l=>`<tr>
+          <td><span class="tag">${l.nr||'–'}</span></td><td><span class="tag">${l.best||'–'}</span></td>
+          <td>${l.lf||'–'}</td><td>${l.datum||'–'}</td><td>${l.artikel||'–'}</td>
+          <td>${l.menge||0}</td><td><span class="badge bgr">${l.lager||'–'}</span></td>
+          <td class="tr">${l.erstelltVon||'–'}</td>
+        </tr>`).join('')
+      :'<tr><td colspan="8" class="te">Noch keine Lieferungen</td></tr>';
+    const sel=document.getElementById('lie-b');
+    if(sel)sel.innerHTML='<option value="">– wählen –</option>'+CB.filter(b=>b.status!=='Abgeschlossen').map(b=>`<option value="${b.id}">${b.nr} – ${b.artikel}</option>`).join('');
+    const dt=document.getElementById('lie-d');if(dt&&!dt.value)dt.value=new Date().toISOString().split('T')[0];
+  }
+  window.saveLief=async()=>{
+    const bid=document.getElementById('lie-b').value,m=parseInt(document.getElementById('lie-m').value)||1;
+    const lager=document.getElementById('lie-l').value,d=document.getElementById('lie-d').value;
+    if(!bid){alert('Bestellung wählen.');return;}
+    const b=CB.find(x=>x.id===bid);
+    const nr='LF-'+new Date().getFullYear()+'-'+String(CLIEF.length+1).padStart(3,'0');
+    try{
+      await addDoc(col('lieferungen'),{nr,best:b?.nr||'?',lf:b?.lf||'?',datum:d,artikel:b?.artikel||'?',menge:m,lager,erstellt:serverTimestamp(),erstelltVon:G.cu.email});
+      const a=CA.find(x=>x.bez===b?.artikel);
+      if(a){const neu=(a.bestand||0)+m;await updateDoc(dref('artikel',a.id),{bestand:neu,status:calcSt(neu,a.min||50),geaendertVon:G.cu.email,geaendert:serverTimestamp()});}
+      closeMo('mo-lief');toast('Lieferung eingebucht (+'+m+')');
+    }catch(e){toast(e.message,'r');}
+  };
+
+  // ── BERICHTE ──
+  function renderBer(){
+    const sorted=[...CA].sort((a,b)=>(b.bestand||0)-(a.bestand||0)).slice(0,5);
+    const mx=sorted[0]?.bestand||1;
+    document.getElementById('topbars').innerHTML=sorted.map(a=>`<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span class="fw">${a.bez||'–'}</span><span class="tr">${a.bestand||0} ${a.einheit||''}</span></div>
+      <div class="pr"><div class="prb g" style="width:${Math.round((a.bestand||0)/mx*100)}%"></div></div>
+    </div>`).join('')||'<div class="tr">Keine Daten</div>';
+    const n=CA.reduce((s,a)=>s+(a.bestand||0)*(a.ek||0),0);
+    const mw=n*MWST;
+    document.getElementById('wertsum').innerHTML=`
+      <div class="kr"><span class="kl">Exkl. MWST</span><span class="kv">${chf(n)}</span></div>
+      <div class="kr"><span class="kl">MWST 7.7%</span><span class="kv">${chf(mw)}</span></div>
+      <div class="kr"><span class="kl fw">Inkl. MWST</span><span class="kv fw tb">${chf(n+mw)}</span></div>
+      <div class="kr"><span class="kl">Artikel gesamt</span><span class="kv">${CA.length}</span></div>
+      <div class="kr"><span class="kl">Unter Mindestbestand</span><span class="kv trd">${CA.filter(a=>(a.bestand||0)<(a.min||0)).length}</span></div>`;
+    const ue=CB.filter(b=>b.status==='Überfällig'),of=CB.filter(b=>b.status==='Offen');
+    document.getElementById('lkrep').innerHTML=`
+      <div class="kr"><span class="kl fw trd">Überfällig (${ue.length})</span></div>
+      ${ue.map(b=>`<div class="kr"><span class="kl">${b.nr} – ${b.artikel}</span><span class="kv tr">${b.datum}</span></div>`).join('')}
+      <div class="kr mt"><span class="kl fw">Offen (${of.length})</span></div>
+      ${of.map(b=>`<div class="kr"><span class="kl">${b.nr} – ${b.artikel}</span><span class="kv tr">${b.datum}</span></div>`).join('')}`;
+  }
+
+  // ── BENUTZER ──
+  function renderBenutzer(){
+    const el=document.getElementById('usrtbody');if(!el)return;
+    el.innerHTML=CUSR.length
+      ?CUSR.map(u=>`<tr>
+          <td><strong>${u.name||'–'}</strong></td><td>${u.email||'–'}</td>
+          <td><span class="badge ${u.rolle==='admin'?'bb':'bgr'}">${u.rolle==='admin'?'Admin':'Benutzer'}</span></td>
+          <td class="tr">${u.erstellt?.toDate?u.erstellt.toDate().toLocaleDateString('de-CH'):'–'}</td>
+        </tr>`).join('')
+      :'<tr><td colspan="4" class="te">Noch keine Benutzer</td></tr>';
+  }
+
+  // ── EINSTELLUNGEN ──
+  async function loadSetDB(){
+    try{
+      const s=await getDoc(doc(db,'kunden',KID,'einstellungen','firma'));
+      if(s.exists()){const d=s.data();
+        if(d.firma)document.getElementById('sf').value=d.firma;
+        if(d.adresse)document.getElementById('sa').value=d.adresse;
+        if(d.uid)document.getElementById('su').value=d.uid;
+        if(d.iban&&document.getElementById('siban'))document.getElementById('siban').value=d.iban;
+      }
+    }catch{}
+  }
+  window.saveSet=async()=>{
+    saveEmailJSConfig();
+    try{
+      await setDoc(doc(db,'kunden',KID,'einstellungen','firma'),{
+        firma:document.getElementById('sf').value,
+        adresse:document.getElementById('sa').value,
+        uid:document.getElementById('su').value,
+        iban:document.getElementById('siban')?.value||'',
+        geaendert:serverTimestamp()
+      });toast('Einstellungen gespeichert');
+    }catch(e){toast(e.message,'r');}
+  };
+
+  // ── KATEGORIEN ──
+  let CKAT=[];
+  function startKatSub(){
+    const u7=onSnapshot(query(col('kategorien'),orderBy('name')),snap=>{
+      CKAT=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderKategorien();populateKatSelects();
+    });
+    unsub.push(u7);
+  }
+
+  window.saveKat=async()=>{
+    const id=document.getElementById('kat-id').value;
+    const name=document.getElementById('kat-name').value.trim();
+    if(!name){alert('Name ist Pflicht.');return;}
+    const data={name,color:document.getElementById('kat-color').value,
+      beschreibung:document.getElementById('kat-desc').value,
+      geaendertVon:G.cu.email,geaendert:serverTimestamp()};
+    try{
+      if(id)await updateDoc(dref('kategorien',id),data);
+      else await addDoc(col('kategorien'),{...data,erstellt:serverTimestamp()});
+      document.getElementById('kat-id').value='';
+      document.getElementById('kat-name').value='';
+      closeMo('mo-kat');toast('Kategorie gespeichert');
+    }catch(e){toast(e.message,'r');}
+  };
+
+  window.editKat=id=>{
+    const k=CKAT.find(x=>x.id===id);if(!k)return;
+    document.getElementById('kat-id').value=id;
+    document.getElementById('kat-name').value=k.name||'';
+    document.getElementById('kat-color').value=k.color||'blue';
+    document.getElementById('kat-desc').value=k.beschreibung||'';
+    openMo('mo-kat');
+  };
+  window.delKat=async(id,name)=>{
+    if(!confirm(`Kategorie "${name}" löschen?`))return;
+    try{await deleteDoc(dref('kategorien',id));toast('Kategorie gelöscht');}
+    catch(e){toast(e.message,'r');}
+  };
+
+  const katColors={blue:'badge bb',green:'badge bg',amber:'badge ba',red:'badge br',gray:'badge bgr'};
+  const katColorLabels={blue:'Blau',green:'Grün',amber:'Orange',red:'Rot',gray:'Grau'};
+
+  function populateKatSelects(){
+    const opts='<option value="">– Keine –</option>'+CKAT.map(k=>`<option value="${k.id}">${k.name}</option>`).join('');
+    ['a-kat','akatfilter'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(!el)return;
+      const cur=el.value;
+      if(id==='akatfilter') el.innerHTML='<option value="">Alle Kategorien</option>'+CKAT.map(k=>`<option value="${k.id}">${k.name}</option>`).join('');
+      else el.innerHTML=opts;
+      el.value=cur;
+    });
+  }
+
+  function renderKategorien(){
+    const tbody=document.getElementById('kattbody');if(!tbody)return;
+    tbody.innerHTML=CKAT.length
+      ?CKAT.map(k=>{
+          const cnt=CA.filter(a=>a.katId===k.id).length;
+          return`<tr>
+            <td><strong>${k.name}</strong>${k.beschreibung?'<br><span style="font-size:11px;color:var(--gray-500)">'+k.beschreibung+'</span>':''}</td>
+            <td>${cnt} Artikel</td>
+            <td><span class="${katColors[k.color]||'badge bgr'}">${katColorLabels[k.color]||'–'}</span></td>
+            <td style="display:flex;gap:6px">
+              <button class="btn bo bs" onclick="editKat('${k.id}')">✏️</button>
+              <button class="btn bo bs" style="color:var(--red)" onclick="delKat('${k.id}','${(k.name||'').replace(/'/g,"\\'")}')">🗑️</button>
+            </td>
+          </tr>`;
+        }).join('')
+      :'<tr><td colspan="4" class="te">Noch keine Kategorien – erste erstellen</td></tr>';
+    // Stats
+    const stats=document.getElementById('kat-stats');if(!stats)return;
+    const uncatCnt=CA.filter(a=>!a.katId).length;
+    const maxC=Math.max(...CKAT.map(k=>CA.filter(a=>a.katId===k.id).length),uncatCnt,1);
+    stats.innerHTML=[
+      ...CKAT.map(k=>{const c=CA.filter(a=>a.katId===k.id).length;const p=Math.round(c/maxC*100);
+        return`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span class="fw">${k.name}</span><span class="tr">${c}</span></div><div class="pr"><div class="prb g" style="width:${p}%"></div></div></div>`;}),
+      uncatCnt?`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span class="fw tr">Ohne Kategorie</span><span class="tr">${uncatCnt}</span></div><div class="pr"><div class="prb" style="width:${Math.round(uncatCnt/maxC*100)}%;background:var(--gray-300)"></div></div></div>`:'',
+    ].join('');
+  }
+
+  // ── AKTIVITÄTSLOG ──
+  let CAKT=[];
+  function startAktSub(){
+    const u8=onSnapshot(query(col('bewegungen'),orderBy('erstellt','desc')),snap=>{
+      CAKT=snap.docs.map(d=>({id:d.id,...d.data()})).slice(0,200);
+      renderAkt();
+    });
+    unsub.push(u8);
+  }
+  function renderAkt(){
+    const tbody=document.getElementById('akttbody');if(!tbody)return;
+    tbody.innerHTML=CAKT.length
+      ?CAKT.map(a=>{
+          const dt=a.erstellt?.toDate?a.erstellt.toDate().toLocaleString('de-CH'):'–';
+          const icon=a.typ==='zugang'?'📥':a.typ==='abgang'?'📤':'🔄';
+          return`<tr>
+            <td style="font-size:12px;color:var(--gray-500)">${dt}</td>
+            <td><span style="font-size:12px">${a.erstelltVon||'–'}</span></td>
+            <td>${icon} ${a.typ==='zugang'?'Zugang':a.typ==='abgang'?'Abgang':'Transfer'}</td>
+            <td><span class="tag">${a.nr||'–'}</span> ${a.bez||''}</td>
+            <td><span class="${a.delta>0?'tg fw':'trd fw'}">${a.delta>0?'+':''} ${a.delta||0}</span> ${a.artikelId?'':''}${a.bemerkung?'· '+a.bemerkung:''}</td>
+          </tr>`;
+        }).join('')
+      :'<tr><td colspan="5" class="te">Noch keine Aktivitäten</td></tr>';
+  }
+  window.exportAktCSV=()=>{
+    const rows=[['Zeitpunkt','Nutzer','Typ','Art.-Nr.','Bezeichnung','Delta','Lagerort','Bemerkung']];
+    CAKT.forEach(a=>rows.push([
+      a.erstellt?.toDate?a.erstellt.toDate().toLocaleString('de-CH'):'–',
+      a.erstelltVon||'',a.typ||'',a.nr||'',a.bez||'',a.delta||0,a.lagerort||'',a.bemerkung||''
+    ]));
+    const el=document.createElement('a');
+    el.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(rows.map(r=>r.join(';')).join('\n'));
+    el.download='aktivitaetslog-'+new Date().toISOString().slice(0,10)+'.csv';el.click();
+  };
+
+  // ── NACHBESTELLUNGS-VORSCHLÄGE ──
+  function renderNachbestellung(){
+    const tief=CA.filter(a=>a.status==='kritisch'||a.status==='tief');
+    const card=document.getElementById('nachbestellungs-card');
+    const box=document.getElementById('dnachbestellung');
+    if(!tief.length){if(card)card.style.display='none';return;}
+    if(card)card.style.display='block';
+    if(!box)return;
+    box.innerHTML=tief.map(a=>`
+      <div class="kr">
+        <span class="dot ${a.status==='kritisch'?'dr':'da'}"></span>
+        <span class="kl"><strong>${a.bez}</strong><br>
+          <span style="font-size:11px;color:var(--gray-500)">Bestand: ${a.bestand||0} | Mindest: ${a.min||0} | Fehlend: ${Math.max(0,(a.min||0)-(a.bestand||0))}</span>
+        </span>
+        <button class="btn bp bs" onclick="schnellBestellen('${a.id}')">+ Bestellen</button>
+      </div>`).join('');
+  }
+  window.schnellBestellen=id=>{
+    const a=CA.find(x=>x.id===id);if(!a)return;
+    // Prefill Bestellungs-Modal
+    const lfSel=document.getElementById('bes-lf');
+    const aSel=document.getElementById('bes-a');
+    const mInput=document.getElementById('bes-m');
+    if(aSel){
+      for(let o of aSel.options){if(o.text===a.bez){aSel.value=o.value;break;}}
+    }
+    if(mInput) mInput.value=Math.max(a.min||50,(a.min||50)-(a.bestand||0));
+    if(document.getElementById('bes-p')) document.getElementById('bes-p').value=(a.ek||0).toFixed(2);
+    openMo('mo-best');
+  };
+  window.bestelleAlle=()=>{
+    const tief=CA.filter(a=>a.status==='kritisch'||a.status==='tief');
+    if(!tief.length){toast('Kein Artikel unter Mindestbestand');return;}
+    toast('Bestellungs-Modal für ersten Artikel wird geöffnet');
+    schnellBestellen(tief[0].id);
+  };
+
+  // ── EMAILJS BENACHRICHTIGUNGEN ──
+  function loadEmailJSConfig(){
+    try{
+      const cfg=JSON.parse(localStorage.getItem('lp_ejs_'+KID)||'{}');
+      ['ejs-pk','ejs-sid','ejs-tid','ejs-mail'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el&&cfg[id])el.value=cfg[id];
+      });
+      const cb=document.getElementById('ejs-auto');
+      if(cb)cb.checked=cfg['ejs-auto']||false;
+      updateEmailJSStatus();
+    }catch{}
+  }
+  window.saveEmailJSConfig=()=>{
+    const cfg={};
+    ['ejs-pk','ejs-sid','ejs-tid','ejs-mail'].forEach(id=>{
+      const el=document.getElementById(id);if(el)cfg[id]=el.value;
+    });
+    const cb=document.getElementById('ejs-auto');
+    cfg['ejs-auto']=cb?cb.checked:false;
+    localStorage.setItem('lp_ejs_'+KID,JSON.stringify(cfg));
+    updateEmailJSStatus();
+    toast('E-Mail Konfiguration gespeichert');
+  };
+  function getEJSCfg(){try{return JSON.parse(localStorage.getItem('lp_ejs_'+KID)||'{}');}catch{return{};}}
+  function updateEmailJSStatus(){
+    const c=getEJSCfg();
+    const el=document.getElementById('emailjs-status');if(!el)return;
+    const ok=c['ejs-pk']&&c['ejs-sid']&&c['ejs-tid']&&c['ejs-mail'];
+    el.className='badge '+(ok?'bg':'br');
+    el.textContent=ok?'✓ Konfiguriert':'Nicht konfiguriert';
+  }
+  async function sendAlertEmail(artikel){
+    const c=getEJSCfg();
+    if(!c['ejs-pk']||!c['ejs-sid']||!c['ejs-tid']||!c['ejs-mail'])return false;
+    try{
+      if(!window.emailjs){
+        await new Promise((res,rej)=>{
+          const s=document.createElement('script');
+          s.src='https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+          s.onload=res;s.onerror=rej;document.head.appendChild(s);
+        });
+        window.emailjs.init({publicKey:c['ejs-pk']});
+      }
+      const params={
+        to_email:c['ejs-mail'],
+        subject:`LagerPro Alert: ${artikel.length} Artikel unter Mindestbestand`,
+        artikel_liste:artikel.map(a=>`• ${a.bez}: ${a.bestand||0}/${a.min||0} (${a.status})`).join('\n'),
+        mandant:KID,
+        datum:new Date().toLocaleString('de-CH'),
+        firma: document.getElementById('sf')?.value||KID,
+      };
+      await window.emailjs.send(c['ejs-sid'],c['ejs-tid'],params);
+      return true;
+    }catch(e){console.error('EmailJS:',e);return false;}
+  }
+  window.testEmail=async()=>{
+    const c=getEJSCfg();
+    if(!c['ejs-pk']){toast('EmailJS nicht konfiguriert – bitte Felder ausfüllen und speichern','a');return;}
+    saveEmailJSConfig();
+    const ok=await sendAlertEmail([{bez:'Test-Artikel',bestand:5,min:50,status:'kritisch'}]);
+    ok?toast('Test-E-Mail erfolgreich gesendet'):toast('Fehler – Public Key / Service / Template prüfen','r');
+  };
+  window.checkKritischUndSend=async()=>{
+    const krit=CA.filter(a=>a.status==='kritisch'||a.status==='tief');
+    if(!krit.length){toast('Alle Bestände OK – keine E-Mail nötig');return;}
+    const ok=await sendAlertEmail(krit);
+    ok?toast(`Alert gesendet: ${krit.length} Artikel unter Mindestbestand`):toast('E-Mail Fehler – Konfiguration prüfen','r');
+  };
+  // Auto-check on artikel update
+  function autoEmailCheck(){
+    const c=getEJSCfg();
+    if(!c['ejs-auto'])return;
+    const krit=CA.filter(a=>a.status==='kritisch');
+    if(krit.length)sendAlertEmail(krit);
+  }
+
+  // ── BEXIO EXPORT ──
+  window.exportBexioArtikel=()=>{
+    const rows=[['Artikelnummer','Bezeichnung','Kategorie','Einheit','Einkaufspreis','Verkaufspreis','Bestand','Lagerort']];
+    CA.forEach(a=>{
+      const kat=CKAT.find(k=>k.id===a.katId);
+      rows.push([a.nr,a.bez,kat?.name||'',a.einheit,(a.ek||0).toFixed(2),(a.vk||0).toFixed(2),a.bestand||0,a.lagerort]);
+    });
+    const el=document.createElement('a');
+    el.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(rows.map(r=>r.join(';')).join('\n'));
+    el.download='bexio-artikel-'+new Date().toISOString().slice(0,10)+'.csv';el.click();
+    toast('Bexio Artikel-Export gestartet');
+  };
+  window.exportBexioBestellungen=()=>{
+    const rows=[['Belegnummer','Lieferant','Artikel','Menge','Preis exkl.','MWST','Preis inkl.','Datum','Status']];
+    CB.forEach(b=>{
+      const m=(b.preis||0)*0.077;
+      rows.push([b.nr,b.lf,b.artikel,b.menge,(b.preis||0).toFixed(2),m.toFixed(2),((b.preis||0)+m).toFixed(2),b.datum,b.status]);
+    });
+    const el=document.createElement('a');
+    el.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(rows.map(r=>r.join(';')).join('\n'));
+    el.download='bexio-bestellungen-'+new Date().toISOString().slice(0,10)+'.csv';el.click();
+    toast('Bexio Bestellungen-Export gestartet');
+  };
+
+  // ── EXPORT ──
+  window.exportCSV=()=>{
+    const rows=[['Nr.','Bezeichnung','Einheit','EK','VK','Bestand','Mindest','Lager','Status']];
+    CA.forEach(a=>rows.push([a.nr,a.bez,a.einheit,(a.ek||0).toFixed(2),(a.vk||0).toFixed(2),a.bestand||0,a.min||0,a.lagerort,a.status]));
+    const el=document.createElement('a');
+    el.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(rows.map(r=>r.join(';')).join('\n'));
+    el.download='lagerpro-'+new Date().toISOString().slice(0,10)+'.csv';el.click();
+  };
+
+  // ── MODAL / TAB HELPERS ──
+  window.openMo=id=>document.getElementById(id).classList.add('open');
+  window.closeMo=id=>{
+    document.getElementById(id).classList.remove('open');
+    const m={'mo-artikel':'a-id','mo-lf':'lf-id'};
+    if(m[id])document.getElementById(m[id]).value='';
+  };
+  document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+  window.stab=(el,tid)=>{
+    const p=el.closest('.page')||document;
+    p.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    p.querySelectorAll('.tbc').forEach(t=>t.classList.remove('active'));
+    el.classList.add('active');document.getElementById(tid).classList.add('active');
+  };
+}
+</script>
+</body>
+</html>
