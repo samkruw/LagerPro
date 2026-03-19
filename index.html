@@ -620,27 +620,42 @@ window.saveConfig=()=>{
   const err=document.getElementById('cfg-err');
   if(!kid){err.style.display='block';err.textContent='Kunden-ID ist Pflicht.';return;}
 
-  // Robuster Parser: akzeptiert echtes JSON UND das Firebase-Format (Keys ohne Anführungszeichen)
-  let cfg;
-  try {
-    // Versuch 1: Standard JSON.parse (Keys mit Anführungszeichen)
-    cfg = JSON.parse(raw);
-  } catch {
-    try {
-      // Versuch 2: Firebase-Format bereinigen — Keys ohne Quotes → mit Quotes
-      // z.B.  apiKey: "xxx"  →  "apiKey": "xxx"
-      let cleaned = raw
-        .replace(/^[^{]*/, '')          // alles vor { entfernen (const firebaseConfig = ...)
-        .replace(/[^}]*$/, '')          // alles nach } entfernen (Semikolon etc.)
-        .replace(/(\w+)\s*:/g, '"$1":') // Keys ohne Quotes → mit Quotes
-        .replace(/,\s*}/g, '}')         // trailing comma entfernen
-        .replace(/,\s*]/g, ']');        // trailing comma in Arrays entfernen
-      cfg = JSON.parse(cleaned);
-    } catch {
-      err.style.display='block';
-      err.textContent='JSON konnte nicht gelesen werden. Bitte den gesamten { ... } Block aus der Firebase Console einfügen.';
-      return;
+  // Robuster Parser — akzeptiert JSON und Firebase JS-Format (Keys ohne Quotes, Semikolon, appId mit Doppelpunkten)
+  function parseFirebaseCfg(raw) {
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('kein Block');
+    let s = match[0], result = '', i = 0;
+    while (i < s.length) {
+      const ch = s[i];
+      if (ch === '"') {
+        // String-Literal komplett übernehmen — Inhalt NICHT anfassen
+        let j = i + 1;
+        while (j < s.length && s[j] !== '"') { if (s[j] === '\\') j++; j++; }
+        result += s.slice(i, j + 1);
+        i = j + 1; continue;
+      }
+      if (/[a-zA-Z_$]/.test(ch)) {
+        // Wort lesen
+        let j = i;
+        while (j < s.length && /[a-zA-Z0-9_$]/.test(s[j])) j++;
+        const word = s.slice(i, j);
+        // Prüfen: folgt (optional Whitespace) ein Doppelpunkt? → Key → in Quotes
+        let k = j;
+        while (k < s.length && /\s/.test(s[k])) k++;
+        result += (s[k] === ':') ? '"' + word + '"' : word;
+        i = j; continue;
+      }
+      result += ch; i++;
     }
+    return JSON.parse(result);
+  }
+
+  let cfg;
+  try { cfg = parseFirebaseCfg(raw); }
+  catch(e) {
+    err.style.display='block';
+    err.textContent='Config konnte nicht gelesen werden. Bitte den { ... } Block direkt aus Firebase Console kopieren.';
+    return;
   }
   if(!cfg.apiKey||!cfg.projectId){err.style.display='block';err.textContent='apiKey / projectId fehlen — kompletten Config-Block einfügen.';return;}
   localStorage.setItem('lp_cfg',JSON.stringify({fb:cfg,kid}));
