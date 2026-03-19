@@ -1610,7 +1610,6 @@ if(!cfg){
   const katColors={blue:'badge bb',green:'badge bg',amber:'badge ba',red:'badge br',gray:'badge bgr',purple:'badge',_purple:'background:var(--blue-light);color:#6b46c1'};
   const katColorLabels={blue:'Blau',green:'Grün',amber:'Orange',red:'Rot',gray:'Grau',purple:'Lila'};
   function katBadgeHTML(kat){if(!kat)return'<span class="tr">–</span>';const icon=kat.icon?kat.icon+' ':'';return`<span class="${katColors[kat.color]||'badge bgr'}">${icon}${kat.name}</span>`;}
-  const katColorLabels={blue:'Blau',green:'Grün',amber:'Orange',red:'Rot',gray:'Grau'};
 
   function populateKatSelects(){
     const opts='<option value="">– Keine –</option>'+CKAT.map(k=>`<option value="${k.id}">${k.name}</option>`).join('');
@@ -1817,20 +1816,20 @@ if(!cfg){
   };
 
   function startTourenSub(){
-    const u7=onSnapshot(query(col('touren'),orderBy('datum','desc')),snap=>{
+    const u10=onSnapshot(query(col('touren'),orderBy('datum','desc')),snap=>{
       CTOUREN=snap.docs.map(d=>({id:d.id,...d.data()}));
       document.getElementById('cnt-touren').textContent=CTOUREN.filter(t=>t.status==='Geplant'||t.status==='Unterwegs').length||'';
       if(curP==='touren'){renderTouren();renderWeek();}
     });
-    const u8=onSnapshot(query(col('fahrer'),orderBy('name')),snap=>{
+    const u11=onSnapshot(query(col('fahrer'),orderBy('name')),snap=>{
       CFAHRER=snap.docs.map(d=>({id:d.id,...d.data()}));
       if(curP==='touren'){renderFahrerList();populateTourFahrerSelect();}
     });
-    const u9=onSnapshot(query(col('lieferscheine'),orderBy('datum','desc')),snap=>{
+    const u12=onSnapshot(query(col('lieferscheine'),orderBy('datum','desc')),snap=>{
       CLIEFERSCHEINE=snap.docs.map(d=>({id:d.id,...d.data()}));
       if(curP==='touren'){renderLsPool();populateTourLsSelect();}
     });
-    unsub.push(u7,u8,u9);
+    unsub.push(u10,u11,u12);
   }
 
   // ── WOCHENKALENDER ──
@@ -1863,13 +1862,9 @@ if(!cfg){
         const clr=fahr?fahrColors[fahr.color]||'#a3e635':'#a3e635';
         return`<div style="background:${clr};height:4px;border-radius:2px;margin-top:2px"></div>`;
       }).join('');
-      return`<div onclick="selectDay('${iso}')" style="
-        padding:10px 6px;text-align:center;cursor:pointer;border-right:1px solid var(--border);
-        background:${isToday?'var(--lime-bg)':'transparent'};
-        transition:background .15s;
-      " onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='${isToday?'var(--lime-bg)':'transparent'}'">
+      return`<div onclick="selectDay('${iso}')" data-bg="${isToday?'var(--lime-bg)':'transparent'}" style="padding:10px 6px;text-align:center;cursor:pointer;border-right:1px solid var(--border);background:${isToday?'var(--lime-bg)':'transparent'};transition:background .15s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=this.dataset.bg">
         <div style="font-size:10px;color:var(--text3);font-weight:600">${DAY_NAMES[i]}</div>
-        <div style="font-size:16px;font-weight:700;color:${isToday?'var(--lime)':'var(--text)';margin:2px 0}">${d.getDate()}</div>
+        <div style="font-size:16px;font-weight:700;color:${isToday?'var(--lime)':'var(--text)'};margin:2px 0">${d.getDate()}</div>
         <div style="min-height:12px">${dotsCss}</div>
         ${dayTouren.length?`<div style="font-size:9px;color:var(--text3)">${dayTouren.length} Tour${dayTouren.length>1?'en':''}</div>`:''}
       </div>`;
@@ -2085,11 +2080,7 @@ if(!cfg){
     if(offeTouren.length===1){
       addLsToTour(offeTouren[0].id,lsId);
     } else {
-      const choice=prompt('Zu welcher Tour hinzufügen?
-'+offeTouren.map((t,i)=>`${i+1}: ${t.nr} (${t.datum})`).join('
-')+'
-
-Nummer eingeben:');
+      const choice=prompt('Zu welcher Tour hinzufügen?\n'+offeTouren.map((t,i)=>`${i+1}: ${t.nr} (${t.datum})`).join('\n')+'\n\nNummer eingeben:');
       const idx=parseInt(choice)-1;
       if(idx>=0&&idx<offeTouren.length)addLsToTour(offeTouren[idx].id,lsId);
     }
@@ -2256,10 +2247,7 @@ Nummer eingeben:');
         l.zeitfenster?`   Zeitfenster: ${l.zeitfenster}`:'',
         l.kontakt?`   Kontakt: ${l.kontakt}${l.tel?' / '+l.tel:''}`:'',
         l.bemerkung?`   Hinweis: ${l.bemerkung}`:''
-      ].filter(Boolean).join('
-')).join('
-
-');
+      ].filter(Boolean).join('\n')).join('\n\n');
       const subject=encodeURIComponent(`Tourplan ${t.nr} · ${t.datum} · ${lsData.length} Stopps`);
       const bodyParts=[
         `Guten Tag ${fahr.name},
@@ -2301,8 +2289,7 @@ ${G.cu.displayName||G.cu.email}`
         await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
         window.emailjs.init({publicKey:ejsCfg['ejs-pk']});
       }
-      const stoppsPlain=lsData.map((l,i)=>`${i+1}. ${l.empfaenger} | ${l.plz||''} ${l.ort||''} | ${l.zeitfenster||'–'}`).join('
-');
+      const stoppsPlain=lsData.map((l,i)=>`${i+1}. ${l.empfaenger} | ${l.plz||''} ${l.ort||''} | ${l.zeitfenster||'–'}`).join('\n')
       await window.emailjs.send(
         ejsCfg['ejs-sid'],
         ejsCfg['ejs-tid-tour']||ejsCfg['ejs-tid']||'template_tour',
@@ -2450,15 +2437,8 @@ ${G.cu.displayName||G.cu.email}`
       assignments[fahr.id].ls.push(...regions[r]);
     });
     // Zeige Vorschlag als Dialog
-    const vorschauLines=Object.values(assignments).filter(a=>a.ls.length).map(a=>
-      `${a.fahrer.name}: ${a.ls.length} Stopps (PLZ ${[...new Set(a.ls.map(l=>(l.plz||'').slice(0,2)))].join(', ')}xx)`
-    ).join('
-');
-    if(!confirm(`Routenvorschlag:
-
-${vorschauLines}
-
-Touren automatisch erstellen?`))return;
+    const vorschauLines=Object.values(assignments).filter(a=>a.ls.length).map(a=>`${a.fahrer.name}: ${a.ls.length} Stopps (PLZ ${[...new Set(a.ls.map(l=>(l.plz||'').slice(0,2)))].join(', ')}xx)`).join('\n');
+    if(!confirm('Routenvorschlag:\n\n'+vorschauLines+'\n\nTouren automatisch erstellen?'))return;
     // Erstelle Touren
     const datum=document.getElementById('tour-datum')?.value||new Date().toISOString().split('T')[0];
     Promise.all(Object.values(assignments).filter(a=>a.ls.length).map(async(a)=>{
