@@ -619,8 +619,30 @@ window.saveConfig=()=>{
   const kid=document.getElementById('cfg-kunde').value.trim();
   const err=document.getElementById('cfg-err');
   if(!kid){err.style.display='block';err.textContent='Kunden-ID ist Pflicht.';return;}
-  let cfg;try{cfg=JSON.parse(raw);}catch{err.style.display='block';err.textContent='Ungültiges JSON.';return;}
-  if(!cfg.apiKey||!cfg.projectId){err.style.display='block';err.textContent='apiKey / projectId fehlen.';return;}
+
+  // Robuster Parser: akzeptiert echtes JSON UND das Firebase-Format (Keys ohne Anführungszeichen)
+  let cfg;
+  try {
+    // Versuch 1: Standard JSON.parse (Keys mit Anführungszeichen)
+    cfg = JSON.parse(raw);
+  } catch {
+    try {
+      // Versuch 2: Firebase-Format bereinigen — Keys ohne Quotes → mit Quotes
+      // z.B.  apiKey: "xxx"  →  "apiKey": "xxx"
+      let cleaned = raw
+        .replace(/^[^{]*/, '')          // alles vor { entfernen (const firebaseConfig = ...)
+        .replace(/[^}]*$/, '')          // alles nach } entfernen (Semikolon etc.)
+        .replace(/(\w+)\s*:/g, '"$1":') // Keys ohne Quotes → mit Quotes
+        .replace(/,\s*}/g, '}')         // trailing comma entfernen
+        .replace(/,\s*]/g, ']');        // trailing comma in Arrays entfernen
+      cfg = JSON.parse(cleaned);
+    } catch {
+      err.style.display='block';
+      err.textContent='JSON konnte nicht gelesen werden. Bitte den gesamten { ... } Block aus der Firebase Console einfügen.';
+      return;
+    }
+  }
+  if(!cfg.apiKey||!cfg.projectId){err.style.display='block';err.textContent='apiKey / projectId fehlen — kompletten Config-Block einfügen.';return;}
   localStorage.setItem('lp_cfg',JSON.stringify({fb:cfg,kid}));
   location.reload();
 };
