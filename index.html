@@ -41,7 +41,7 @@
   ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:4px}
 
   /* ── CONFIG / LOGIN SCREENS ── */
-  #config-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)}
+  #config-screen{display:none!important}
   #login-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)}
   .config-box,.login-box{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:40px 36px;width:100%;max-width:480px;box-shadow:0 25px 60px rgba(0,0,0,.6)}
   .config-box h2{font-size:20px;font-weight:700;color:var(--lime);margin-bottom:6px}
@@ -235,114 +235,25 @@
 </head>
 <body>
 
-<!-- ── CONFIG ── -->
-<div id="config-screen">
-  <div class="config-box" style="max-width:560px;background:var(--bg2)">
-    <h2 style="font-size:20px;font-weight:700;color:var(--blue);margin-bottom:4px">🔧 LagerPro einrichten</h2>
-    <p style="font-size:13px;color:var(--gray-500);margin-bottom:20px;line-height:1.6">
-      Firebase Console →
-      <strong>Projekteinstellungen → Deine Apps → Config</strong><br>
-      Werte einzeln aus dem Config-Block unten abtippen oder einfügen.
-    </p>
-
-    <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:12px 14px;font-family:monospace;font-size:11px;color:var(--text2);margin-bottom:20px;line-height:1.9">
-      <strong style="font-family:inherit;font-size:12px;color:var(--lime)">Firebase Config (Referenz):</strong><br>
-      apiKey: <span style="color:var(--lime)">"AIza..."</span>,<br>
-      authDomain: <span style="color:var(--lime)">"projekt.firebaseapp.com"</span>,<br>
-      projectId: <span style="color:var(--lime)">"projekt-id"</span>,<br>
-      storageBucket: <span style="color:var(--lime)">"projekt.appspot.com"</span>,<br>
-      messagingSenderId: <span style="color:var(--lime)">"123456789"</span>,<br>
-      appId: <span style="color:var(--lime)">"1:123:web:abc"</span>
-    </div>
-
-    <div class="cfg-fields">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div>
-          <label>apiKey *</label>
-          <input id="fb-apiKey" placeholder="AIzaSy..." autocomplete="off">
-        </div>
-        <div>
-          <label>projectId *</label>
-          <input id="fb-projectId" placeholder="mein-projekt" autocomplete="off">
-        </div>
-        <div>
-          <label>authDomain *</label>
-          <input id="fb-authDomain" placeholder="projekt.firebaseapp.com" autocomplete="off">
-        </div>
-        <div>
-          <label>storageBucket</label>
-          <input id="fb-storageBucket" placeholder="projekt.appspot.com" autocomplete="off">
-        </div>
-        <div>
-          <label>messagingSenderId</label>
-          <input id="fb-messagingSenderId" placeholder="123456789" autocomplete="off">
-        </div>
-        <div>
-          <label>appId</label>
-          <input id="fb-appId" placeholder="1:123:web:abc" autocomplete="off">
-        </div>
-      </div>
-
-      <div style="border-top:1px solid var(--gray-200);margin-top:4px;padding-top:16px">
-        <label>Kunden-ID <span style="font-weight:400;color:var(--gray-500)">(Mandanten-Schlüssel)</span></label>
-        <input id="cfg-kunde" placeholder="z.B. zerogen" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9-]/g,'-')" style="margin-top:4px">
-        <div class="cfg-hint" style="margin-top:6px">Nur Kleinbuchstaben, Zahlen, Bindestriche. Alle Nutzer desselben Betriebs verwenden dieselbe ID.</div>
-      </div>
-
-      <div class="cfg-note">
-        💡 <strong>Firestore Security Rules</strong> — einmalig in Firebase Console → Firestore → Regeln einfügen:<br><br>
-        <code>rules_version = '2';</code><br>
-        <code>service cloud.firestore {</code><br>
-        <code>&nbsp;match /databases/{db}/documents {</code><br>
-        <code>&nbsp;&nbsp;match /kunden/{kid}/{col}/{doc} {</code><br>
-        <code>&nbsp;&nbsp;&nbsp;allow read, write: if request.auth != null;</code><br>
-        <code>&nbsp;&nbsp;}</code><br>
-        <code>&nbsp;}</code><br>
-        <code>}</code>
-      </div>
-
-      <div class="cfg-err" id="cfg-err"></div>
-      <button class="btn-login" onclick="saveConfig()">✅ Speichern &amp; starten</button>
-      <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--gray-500)">
-        Werte werden nur lokal im Browser gespeichert · <a href="#" onclick="showCfg()" style="color:var(--gray-500)">zurücksetzen</a>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- config-screen entfernt: Firebase Config ist hardcoded -->
+<div id="config-screen" style="display:none"></div>
 
 <!-- ── LOGIN ── -->
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">Lager<span>Pro</span></div>
-    <div class="login-sub" id="lsub">Mandant wird geladen…</div>
-    <div class="login-tabs">
-      <div class="login-tab active" onclick="ltab('login')">Anmelden</div>
-      <div class="login-tab" onclick="ltab('reg')">Registrieren</div>
-    </div>
-    <div id="t-login">
-      <div class="lform">
-        <div><label>E-Mail</label><input type="email" id="le" placeholder="max@firma.ch" autocomplete="username"></div>
-        <div><label>Passwort</label><input type="password" id="lp" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
-        <div class="l-err" id="lerr"></div>
-        <button class="btn-login" id="btnl" onclick="doLogin()">Anmelden</button>
-        <div style="text-align:center;margin-top:8px">
-          <a href="#" onclick="doReset()" style="font-size:12px;color:var(--gray-500)">Passwort vergessen?</a>
-          &nbsp;·&nbsp;<a href="#" onclick="showCfg()" style="font-size:12px;color:var(--gray-500)">⚙️ Config</a>
-        </div>
+    <div class="login-sub" id="lsub">Bitte anmelden</div>
+    <div class="lform" style="margin-top:16px">
+      <div><label>E-Mail</label><input type="email" id="le" placeholder="max@firma.ch" autocomplete="username"></div>
+      <div><label>Passwort</label><input type="password" id="lp" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="l-err" id="lerr"></div>
+      <button class="btn-login" id="btnl" onclick="doLogin()">Anmelden</button>
+      <div style="text-align:center;margin-top:8px">
+        <a href="#" onclick="doReset()" style="font-size:12px;color:var(--text3)">Passwort vergessen?</a>
       </div>
     </div>
-    <div id="t-reg" style="display:none">
-      <div class="lform">
-        <div><label>Name</label><input type="text" id="rn" placeholder="Max Muster"></div>
-        <div><label>E-Mail</label><input type="email" id="re" placeholder="max@firma.ch"></div>
-        <div><label>Passwort (min. 6 Zeichen)</label><input type="password" id="rp" placeholder="••••••••"></div>
-        <div><label>Rolle</label>
-          <select id="rr"><option value="benutzer">Benutzer (Lager &amp; Inventur)</option><option value="admin">Admin (Vollzugriff)</option></select>
-        </div>
-        <div class="l-err" id="rerr"></div>
-        <div class="l-suc" id="rsuc"></div>
-        <button class="btn-login" id="btnr" onclick="doReg()">Konto erstellen</button>
-      </div>
+    <div style="margin-top:20px;padding:10px 14px;background:var(--bg3);border-radius:8px;border:1px solid var(--border);font-size:11px;color:var(--text3);text-align:center">
+      🔐 Zugang nur auf Einladung · Neue Benutzer werden vom Administrator eingerichtet
     </div>
   </div>
 </div>
@@ -521,8 +432,31 @@
     <!-- BENUTZER -->
     <div class="page" id="page-benutzer">
       <div class="ph"><div><h1>Benutzer</h1><div class="sub">Nutzer dieses Mandanten</div></div></div>
+      <div class="card" style="margin-bottom:18px">
+        <div class="ch"><h2>ℹ️ Benutzerverwaltung</h2></div>
+        <div class="cb">
+          <div class="al ala">
+            <span>⚠️</span>
+            <div>Neue Benutzer werden direkt in der <strong>Firebase Console</strong> angelegt.<br>
+            Danach muss in Firestore unter <code style="color:var(--lime)">/benutzer/{uid}</code> ein Dokument mit folgenden Feldern erstellt werden:</div>
+          </div>
+          <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:14px;font-family:monospace;font-size:12px;color:var(--text2);line-height:2;margin-top:12px">
+            <span style="color:var(--lime)">name</span>: <span style="color:var(--amber)">"Max Muster"</span><br>
+            <span style="color:var(--lime)">email</span>: <span style="color:var(--amber)">"<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="ef828e97af89869d828ec18c87">[email&#160;protected]</a>"</span><br>
+            <span style="color:var(--lime)">rolle</span>: <span style="color:var(--amber)">"admin"</span> <span style="color:var(--text3)">// oder "benutzer"</span><br>
+            <span style="color:var(--lime)">mandantId</span>: <span style="color:var(--amber)">"firma-abc"</span> <span style="color:var(--text3)">// gleiche ID = geteilte Daten</span><br>
+            <span style="color:var(--lime)">erstellt</span>: <span style="color:var(--blue)">serverTimestamp()</span>
+          </div>
+          <div class="al alg" style="margin-top:12px">
+            <span>💡</span>
+            <div>Dein Mandant: <strong style="color:var(--lime)" id="usr-kid-display">–</strong><br>
+            Alle Benutzer mit derselben <code>mandantId</code> teilen die gleichen Daten.</div>
+          </div>
+          <a href="https://console.firebase.google.com" target="_blank" class="btn bp" style="margin-top:14px;display:inline-flex">🔗 Firebase Console öffnen</a>
+        </div>
+      </div>
       <div class="card"><div class="tw">
-        <table><thead><tr><th>Name</th><th>E-Mail</th><th>Rolle</th><th>Erstellt</th></tr></thead>
+        <table><thead><tr><th>Name</th><th>E-Mail</th><th>Rolle</th><th>Mandant</th><th>Erstellt</th></tr></thead>
         <tbody id="usrtbody"></tbody></table>
       </div></div>
     </div>
@@ -1004,7 +938,7 @@
 </div>
 
 <!-- ═══════════════ FIREBASE ═══════════════ -->
-<script type="module">
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth,createUserWithEmailAndPassword,signInWithEmailAndPassword,
   signOut,onAuthStateChanged,sendPasswordResetEmail,updateProfile
@@ -1036,71 +970,38 @@ function showConf(msg='Daten wurden von einem anderen Nutzer geändert'){
   clearTimeout(confT);confT=setTimeout(()=>e.classList.remove('show'),3500);
 }
 
-// ── CONFIG ──
-window.saveConfig=()=>{
-  const kid=document.getElementById('cfg-kunde').value.trim();
-  const err=document.getElementById('cfg-err');
-  err.style.display='none';
-
-  // Einzelfelder direkt auslesen — kein JSON-Parsing mehr nötig
-  const apiKey         = document.getElementById('fb-apiKey').value.trim();
-  const projectId      = document.getElementById('fb-projectId').value.trim();
-  const authDomain     = document.getElementById('fb-authDomain').value.trim();
-  const storageBucket  = document.getElementById('fb-storageBucket').value.trim();
-  const messagingSenderId = document.getElementById('fb-messagingSenderId').value.trim();
-  const appId          = document.getElementById('fb-appId').value.trim();
-
-  if(!apiKey)     { err.style.display='block'; err.textContent='apiKey fehlt.'; return; }
-  if(!projectId)  { err.style.display='block'; err.textContent='projectId fehlt.'; return; }
-  if(!authDomain) { err.style.display='block'; err.textContent='authDomain fehlt.'; return; }
-  if(!kid)        { err.style.display='block'; err.textContent='Kunden-ID ist Pflicht.'; return; }
-
-  const fb = { apiKey, authDomain, projectId,
-    storageBucket:  storageBucket  || projectId+'.appspot.com',
-    messagingSenderId: messagingSenderId || '',
-    appId:          appId || '' };
-
-  localStorage.setItem('lp_cfg',JSON.stringify({fb,kid}));
-  location.reload();
+// ── FIREBASE CONFIG (hardcoded) ──
+// ⚠️  HIER DEINE FIREBASE-WERTE EINTRAGEN:
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyCprwnr7p59mnNs1S1HxiCk1JMsSl5Hgu0",
+  authDomain:        "lagerprozg.firebaseapp.com",
+  projectId:         "lagerprozg",
+  storageBucket:     "lagerprozg.firebasestorage.app",
+  messagingSenderId: "435218869035",
+  appId:             "1:435218869035:web:7e0501965716b8d949336e"
 };
-window.showCfg=()=>{
-  document.getElementById('app-screen').style.display='none';
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('config-screen').style.display='flex';
-  // Felder aus gespeicherter Config vorbefüllen
-  try {
-    const saved = JSON.parse(localStorage.getItem('lp_cfg')||'null');
-    if(saved && saved.fb) {
-      const fb = saved.fb;
-      ['apiKey','authDomain','projectId','storageBucket','messagingSenderId','appId'].forEach(k=>{
-        const el = document.getElementById('fb-'+k);
-        if(el && fb[k]) el.value = fb[k];
-      });
-      const kid = document.getElementById('cfg-kunde');
-      if(kid && saved.kid) kid.value = saved.kid;
-    }
-  } catch {}
-};
+
+// ── MANDANTEN-IDs ──
+// Benutzer der gleichen Firma → gleiche KID → geteilte Daten
+// Jede Firma hat ihre eigene KID → vollständig getrennte Daten
+// Die KID wird bei Login aus Firestore /kunden/{uid}/profil gelesen (Feld: mandantId)
+// Alternativ: Globale KID für Single-Tenant → einfach einen fixen Wert setzen:
+const DEFAULT_KID = "zerogen"; // ← anpassen falls single-tenant
 
 // ── BOOT ──
-const stored=()=>{try{return JSON.parse(localStorage.getItem('lp_cfg')||'null');}catch{return null;}};
-const cfg=stored();
-if(!cfg){
-  load();
-  document.getElementById('config-screen').style.display='flex';
-} else {
-  const app=initializeApp(cfg.fb);
+{
+  const app=initializeApp(FIREBASE_CONFIG);
   const auth=getAuth(app);
   const db=getFirestore(app);
-  const KID=cfg.kid;
   load('Verbinde mit Firebase…');
 
-  // Expose globals for inline handlers
-  const G={auth,db,KID,cu:null,role:'benutzer'};
+  // G.KID wird nach Login dynamisch gesetzt (pro Benutzer aus Firestore)
+  const G={auth,db,KID:null,cu:null,role:'benutzer'};
   window._G=G;
 
-  const col=n=>collection(db,'kunden',KID,n);
-  const dref=(n,id)=>doc(db,'kunden',KID,n,id);
+  // col/dref benutzen immer G.KID (wird nach Login gesetzt)
+  const col=n=>collection(db,'kunden',G.KID,n);
+  const dref=(n,id)=>doc(db,'kunden',G.KID,n,id);
   let CA=[],CLF=[],CB=[],CLIEF=[],CI=[],CUSR=[];
   let unsub=[];
 
@@ -1110,9 +1011,22 @@ if(!cfg){
       load('Lade Daten…');
       G.cu=user;
       try{
-        const snap=await getDoc(dref('benutzer',user.uid));
-        G.role=snap.exists()?snap.data().rolle:'benutzer';
-      }catch{G.role='benutzer';}
+        // Benutzer-Profil laden: mandantId bestimmt welche Firma/Daten
+        const uSnap=await getDoc(doc(db,'benutzer',user.uid));
+        if(uSnap.exists()){
+          const uData=uSnap.data();
+          G.KID=uData.mandantId||DEFAULT_KID;
+          G.role=uData.rolle||'benutzer';
+        } else {
+          // Fallback: kein Profil -> DEFAULT_KID, Rolle benutzer
+          G.KID=DEFAULT_KID;
+          G.role='benutzer';
+        }
+      }catch(e){
+        console.warn('Profil-Fehler:',e);
+        G.KID=DEFAULT_KID;
+        G.role='benutzer';
+      }
       initApp();
       startSubs();
       load();
@@ -1120,17 +1034,12 @@ if(!cfg){
       unsub.forEach(u=>{try{u();}catch{}});unsub=[];
       load();
       document.getElementById('app-screen').style.display='none';
-      document.getElementById('config-screen').style.display='none';
       document.getElementById('login-screen').style.display='flex';
     }
   });
 
-  // ── LOGIN TAB ──
-  window.ltab=id=>{
-    document.querySelectorAll('.login-tab').forEach(t=>t.classList.remove('active'));
-    ['login','reg'].forEach(k=>{const e=document.getElementById('t-'+k);if(e)e.style.display=k===id?'block':'none';});
-    document.querySelectorAll('.login-tab').forEach(t=>{if(t.getAttribute('onclick')?.includes("'"+id+"'"))t.classList.add('active');});
-  };
+  // ltab nicht mehr nötig (kein Register-Tab)
+  window.ltab=()=>{};
 
   // ── DO LOGIN ──
   window.doLogin=async()=>{
@@ -1145,25 +1054,8 @@ if(!cfg){
     }
   };
 
-  // ── DO REGISTER ──
-  window.doReg=async()=>{
-    const n=document.getElementById('rn').value.trim(),e=document.getElementById('re').value.trim(),
-      p=document.getElementById('rp').value,r=document.getElementById('rr').value;
-    const err=document.getElementById('rerr'),suc=document.getElementById('rsuc'),btn=document.getElementById('btnr');
-    err.style.display='none';suc.style.display='none';
-    if(!n||!e||p.length<6){err.textContent='Name, E-Mail und Passwort (min. 6 Z.) ausfüllen.';err.style.display='block';return;}
-    btn.innerHTML='<span class="spinner"></span>…';btn.disabled=true;
-    try{
-      const cr=await createUserWithEmailAndPassword(auth,e,p);
-      await updateProfile(cr.user,{displayName:n});
-      await setDoc(dref('benutzer',cr.user.uid),{name:n,email:e,rolle:r,erstellt:serverTimestamp()});
-      suc.textContent='✅ Konto erstellt – du wirst automatisch angemeldet.';suc.style.display='block';
-    }catch(ex){
-      const m={'auth/email-already-in-use':'E-Mail bereits registriert.','auth/weak-password':'Passwort zu schwach.','auth/invalid-email':'Ungültige E-Mail.'};
-      err.textContent=m[ex.code]||ex.message;err.style.display='block';
-      btn.innerHTML='Konto erstellen';btn.disabled=false;
-    }
-  };
+  // doReg deaktiviert – Benutzer werden nur vom Admin in Firebase Console angelegt
+  window.doReg=()=>toast('Registrierung deaktiviert – bitte Administrator kontaktieren','a');
 
   window.doReset=async()=>{
     const e=document.getElementById('le').value.trim();
@@ -1184,18 +1076,18 @@ if(!cfg){
     document.getElementById('hav').textContent=ini;
     document.getElementById('hname').textContent=nm;
     document.getElementById('hrole').textContent=G.role==='admin'?'Admin':'Benutzer';
-    document.getElementById('hkunde').textContent=KID;
-    document.getElementById('nkunde').textContent=KID;
-    document.getElementById('lsub').textContent='Mandant: '+KID;
+    document.getElementById('hkunde').textContent=G.KID;
+    document.getElementById('nkunde').textContent=G.KID;
+    document.getElementById('lsub').textContent='Mandant: '+G.KID;
     document.getElementById('ddatum').textContent=new Date().toLocaleDateString('de-CH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
     if(G.role!=='admin')document.getElementById('nav-usr').style.display='none';
     // Init counters
     ['cnt-kunden','cnt-kbest','cnt-fahrer'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='';});
+    const kidDisplay=document.getElementById('usr-kid-display');if(kidDisplay)kidDisplay.textContent=G.KID;
     document.getElementById('cfginfo').innerHTML=`
-      <div class="kr"><span class="kl">Projekt-ID</span><span class="kv">${cfg.fb.projectId}</span></div>
-      <div class="kr"><span class="kl">Kunden-ID</span><span class="kv tb">${KID}</span></div>
-      <div class="kr"><span class="kl">Auth-Domain</span><span class="kv">${cfg.fb.authDomain}</span></div>
-      <button class="btn bo bs mt" onclick="showCfg()">⚙️ Config ändern</button>`;
+      <div class="kr"><span class="kl">Projekt-ID</span><span class="kv">${FIREBASE_CONFIG.projectId}</span></div>
+      <div class="kr"><span class="kl">Mandant-ID</span><span class="kv tb">${G.KID}</span></div>
+      <div class="kr"><span class="kl">Auth-Domain</span><span class="kv">${FIREBASE_CONFIG.authDomain}</span></div>`;
     loadSetDB();
     loadEmailJSConfig();
   }
@@ -1736,6 +1628,7 @@ if(!cfg){
       ?CUSR.map(u=>`<tr>
           <td><strong>${u.name||'–'}</strong></td><td>${u.email||'–'}</td>
           <td><span class="badge ${u.rolle==='admin'?'bb':'bgr'}">${u.rolle==='admin'?'Admin':'Benutzer'}</span></td>
+          <td><span class="badge bgr">${u.mandantId||'–'}</span></td>
           <td class="tr">${u.erstellt?.toDate?u.erstellt.toDate().toLocaleDateString('de-CH'):'–'}</td>
         </tr>`).join('')
       :'<tr><td colspan="4" class="te">Noch keine Benutzer</td></tr>';
@@ -1744,7 +1637,7 @@ if(!cfg){
   // ── EINSTELLUNGEN ──
   async function loadSetDB(){
     try{
-      const s=await getDoc(doc(db,'kunden',KID,'einstellungen','firma'));
+      const s=await getDoc(doc(db,'kunden',G.KID,'einstellungen','firma'));
       if(s.exists()){const d=s.data();
         if(d.firma)document.getElementById('sf').value=d.firma;
         if(d.adresse)document.getElementById('sa').value=d.adresse;
@@ -1756,7 +1649,7 @@ if(!cfg){
   window.saveSet=async()=>{
     saveEmailJSConfig();
     try{
-      await setDoc(doc(db,'kunden',KID,'einstellungen','firma'),{
+      await setDoc(doc(db,'kunden',G.KID,'einstellungen','firma'),{
         firma:document.getElementById('sf').value,
         adresse:document.getElementById('sa').value,
         uid:document.getElementById('su').value,
@@ -2421,7 +2314,7 @@ if(!cfg){
 
     // Firmendaten für PDF
     let firma={};
-    try{const snap=await getDoc(doc(db,'kunden',KID,'einstellungen','firma'));if(snap.exists())firma=snap.data();}catch{}
+    try{const snap=await getDoc(doc(db,'kunden',G.KID,'einstellungen','firma'));if(snap.exists())firma=snap.data();}catch{}
 
     // Google Maps navigierbare Route (waypoints)
     function buildGmapsUrl(lsData){
@@ -2679,7 +2572,7 @@ ${G.cu.displayName||G.cu.email}`
     const fahr=CFAHRER.find(f=>f.id===t.fahrerId);
     const lsData=(t.lieferscheine||[]).map(id=>CLIEFERSCHEINE.find(x=>x.id===id)).filter(Boolean);
     let firma={};
-    try{const snap=await getDoc(doc(db,'kunden',KID,'einstellungen','firma'));if(snap.exists())firma=snap.data();}catch{}
+    try{const snap=await getDoc(doc(db,'kunden',G.KID,'einstellungen','firma'));if(snap.exists())firma=snap.data();}catch{}
     if(!lsData.length){toast('Keine Lieferscheine in dieser Tour','a');return;}
     toast(`${lsData.length} Lieferschein-PDF${lsData.length>1?'s werden':'wird'} heruntergeladen…`);
     lsData.forEach((ls,i)=>{
@@ -3228,7 +3121,3 @@ ${G.cu.displayName||G.cu.email}`
   };
 }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-</body>
-</html>
